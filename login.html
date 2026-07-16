@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script src="capacitor.js"></script>
+  <script src="capacitor-runtime.js"></script>
+  <title>ReadForge AI — Sign In</title>
+  <meta name="description" content="Sign in or create an account to start improving your English with ReadForge AI.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg: #06070B;
+      --card: #0D0E14;
+      --text: #EDEEF3;
+      --muted: rgba(237, 238, 243, 0.5);
+      --border: rgba(255,255,255,0.09);
+      --primary: linear-gradient(135deg, #5B8DEF, #9B6BFF);
+      --input-bg: rgba(255,255,255,0.05);
+      --input-border: rgba(255,255,255,0.12);
+      --error: #FF6B6B;
+      --success: #33D6A6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    button, input { color: inherit; font-family: inherit; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: calc(24px + env(safe-area-inset-top, 0px)) calc(24px + env(safe-area-inset-right, 0px)) calc(24px + env(safe-area-inset-bottom, 0px)) calc(24px + env(safe-area-inset-left, 0px));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bg-glow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 85% -5%, rgba(155,107,255,0.18), transparent 60%),
+        radial-gradient(ellipse 700px 700px at -10% 60%, rgba(91,141,239,0.15), transparent 60%),
+        radial-gradient(ellipse 500px 500px at 50% 110%, rgba(91,141,239,0.10), transparent 60%);
+    }
+
+    .card {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 440px;
+      background: rgba(13,14,20,0.85);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 40px;
+      backdrop-filter: blur(24px);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+      animation: fadein .4s ease both;
+    }
+
+    @keyframes fadein {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .brand {
+      display: flex; align-items: center; gap: 8px;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .brand-icon { color: #9B6BFF; }
+    .brand-name { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 600; }
+    .grad { background: linear-gradient(90deg,#6EA8FE,#B78CFF); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+    .tab-row {
+      display: flex; gap: 4px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 4px;
+      margin-bottom: 32px;
+    }
+    .tab-btn {
+      flex: 1; padding: 10px;
+      border: none; border-radius: 11px;
+      background: transparent;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; color: var(--muted);
+      transition: all .2s;
+    }
+    .tab-btn.active {
+      background: rgba(155,107,255,0.15);
+      color: var(--text);
+      box-shadow: inset 0 0 0 1px rgba(155,107,255,0.3);
+    }
+
+    .form-row { display: flex; gap: 12px; }
+    .form-row .field { flex: 1; }
+
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px;
+    }
+    .field-wrap { position: relative; }
+    .field-wrap .fi {
+      position: absolute; left: 14px; top: 50%;
+      transform: translateY(-50%);
+      width: 16px; height: 16px;
+      color: rgba(255,255,255,0.3);
+      pointer-events: none;
+    }
+    .field input {
+      width: 100%; padding: 12px 14px 12px 40px;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 12px;
+      font-size: 14px; color: var(--text);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .field input:focus {
+      border-color: #9B6BFF;
+      box-shadow: 0 0 0 3px rgba(155,107,255,0.15);
+    }
+    .field input::placeholder { color: rgba(255,255,255,0.2); }
+
+    .eye-btn {
+      position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none;
+      cursor: pointer; color: rgba(255,255,255,0.3);
+      padding: 4px; line-height: 0;
+      transition: color .15s;
+    }
+    .eye-btn:hover { color: rgba(255,255,255,0.6); }
+
+    .error-msg {
+      display: none;
+      background: rgba(255,107,107,0.12);
+      border: 1px solid rgba(255,107,107,0.3);
+      border-radius: 10px; padding: 10px 14px;
+      font-size: 13px; color: var(--error);
+      margin-bottom: 18px; line-height: 1.4;
+    }
+    .error-msg.show { display: block; }
+
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: var(--primary);
+      color: #fff; font-weight: 700; font-size: 15px;
+      border: none; border-radius: 14px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: box-shadow .2s, transform .15s, opacity .15s;
+      box-shadow: 0 6px 28px rgba(91,141,239,0.3);
+    }
+    .submit-btn:hover:not(:disabled) { box-shadow: 0 8px 36px rgba(155,107,255,0.45); }
+    .submit-btn:active:not(:disabled) { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+    .divider {
+      text-align: center; font-size: 12px;
+      color: var(--muted); margin: 20px 0;
+      position: relative;
+    }
+    .divider::before, .divider::after {
+      content: ''; position: absolute;
+      top: 50%; width: 40%; height: 1px;
+      background: var(--border);
+    }
+    .divider::before { left: 0; }
+    .divider::after  { right: 0; }
+
+    .spin { animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .success-overlay {
+      display: none;
+      flex-direction: column; align-items: center; gap: 12px;
+      text-align: center; padding: 16px 0;
+    }
+    .success-overlay.show { display: flex; }
+    .success-icon {
+      width: 56px; height: 56px; border-radius: 50%;
+      background: rgba(51,214,166,0.15);
+      border: 1px solid rgba(51,214,166,0.3);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--success);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="card">
+    <!-- Brand -->
+    <div class="brand">
+      <i data-lucide="sparkles" class="brand-icon" style="width:22px;height:22px;"></i>
+      <span class="brand-name">ReadForge <span class="grad">AI</span></span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-row">
+      <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">Sign In</button>
+      <button class="tab-btn" id="tabRegister" onclick="switchTab('register')">Create Account</button>
+    </div>
+
+    <!-- Error -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- Success overlay -->
+    <div class="success-overlay" id="successOverlay">
+      <div class="success-icon">
+        <i data-lucide="check" style="width:24px;height:24px;"></i>
+      </div>
+      <p style="font-weight:600;font-size:16px;" id="successTitle">Welcome back!</p>
+      <p style="font-size:13px;opacity:0.6;" id="successSub">Redirecting to the app…</p>
+    </div>
+
+    <!-- Registration Success/Recovery Key Display Overlay -->
+    <div id="recoveryKeyOverlay" class="success-overlay hidden" style="flex-direction: column; padding: 10px 0; text-align: center; gap: 8px;">
+      <div class="success-icon" style="background: rgba(155, 107, 255, 0.15); border-color: rgba(155, 107, 255, 0.3); color: #B78CFF; margin-bottom: 8px;">
+        <i data-lucide="key" style="width:24px;height:24px;"></i>
+      </div>
+      <p style="font-weight:700;font-size:16px;margin:0;">Save Your Recovery Key</p>
+      <p style="font-size:12px;opacity:0.7;margin:0 auto 12px;max-width:320px;line-height:1.4;">
+        Copy and save this recovery key in a safe place. You will need it to reset your password if you ever get locked out.
+      </p>
+      
+      <div style="
+        background: rgba(255,255,255,0.04);
+        border: 1px dashed rgba(255,255,255,0.15);
+        padding: 10px 16px;
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: #fff;
+        margin-bottom: 16px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      ">
+        <span id="displayKey">RF-XXXX-XXXX</span>
+        <button type="button" onclick="copyRecoveryKey()" style="
+          background: none; border: none; color: #5B8DEF; cursor: pointer;
+          display: flex; align-items: center; justify-content: center; padding: 4px;
+        " title="Copy to clipboard">
+          <i data-lucide="copy" style="width:14px;height:14px;"></i>
+        </button>
+      </div>
+
+      <button type="button" onclick="proceedToApp()" class="submit-btn" style="width: auto; padding: 10px 24px; background: linear-gradient(135deg,#5B8DEF,#9B6BFF); font-size: 13px;">
+        I've saved it, continue
+      </button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm" onsubmit="handleLogin(event)">
+      <div class="field">
+        <label>Email address</label>
+        <div class="field-wrap">
+          <i data-lucide="mail" class="fi"></i>
+          <input type="email" id="loginEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-wrap">
+          <i data-lucide="lock" class="fi"></i>
+          <input type="password" id="loginPassword" placeholder="••••••••" required autocomplete="current-password">
+          <button type="button" class="eye-btn" onclick="toggleEye('loginPassword', this)">
+            <i data-lucide="eye" style="width:15px;height:15px;"></i>
+          </button>
+        </div>
+      </div>
+      <div style="text-align: right; margin-top: -10px; margin-bottom: 18px;">
+        <a href="#" onclick="switchTab('recover')" style="font-size: 12px; color: #5B8DEF; text-decoration: none; opacity: 0.85;">Forgot password?</a>
+      </div>
+      <button type="submit" class="submit-btn" id="loginBtn">
+        <i data-lucide="log-in" style="width:16px;height:16px;"></i>
+        Sign In
+      </button>
+    </form>
+
+    <!-- REGISTER FORM -->
+    <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+      <div class="form-row">
+        <div class="field">
+          <label>First Name</label>
+          <div class="field-wrap">
+            <i data-lucide="user" class="fi"></i>
+            <input type="text" id="regName" placeholder="Alex" required autocomplete="given-name">
+          </div>
+        </div>
+        <div class="field">
+          <label>Last Name</label>
+          <div class="field-wrap">
+            <i data-lucide="user" class="fi"></i>
+            <input type="text" id="regSurname" placeholder="Smith" required autocomplete="family-name">
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Email address</label>
+        <div class="field-wrap">
+          <i data-lucide="mail" class="fi"></i>
+          <input type="email" id="regEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="field-wrap">
+          <i data-lucide="lock" class="fi"></i>
+          <input type="password" id="regPassword" placeholder="Min. 6 characters" required autocomplete="new-password" minlength="6">
+          <button type="button" class="eye-btn" onclick="toggleEye('regPassword', this)">
+            <i data-lucide="eye" style="width:15px;height:15px;"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn" id="registerBtn">
+        <i data-lucide="user-plus" style="width:16px;height:16px;"></i>
+        Create Account
+      </button>
+    </form>
+
+    <!-- PASSWORD RECOVERY FORM -->
+    <form id="recoverForm" class="hidden" onsubmit="handleRecover(event)">
+      <div class="field">
+        <label>Email address</label>
+        <div class="field-wrap">
+          <i data-lucide="mail" class="fi"></i>
+          <input type="email" id="recoverEmail" placeholder="you@example.com" required autocomplete="email">
+        </div>
+      </div>
+      <div class="field">
+        <label>Recovery Key</label>
+        <div class="field-wrap">
+          <i data-lucide="key" class="fi"></i>
+          <input type="text" id="recoverKey" placeholder="RF-XXXX-XXXX" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>New Password</label>
+        <div class="field-wrap">
+          <i data-lucide="lock" class="fi"></i>
+          <input type="password" id="recoverPassword" placeholder="Min. 6 characters" required autocomplete="new-password" minlength="6">
+          <button type="button" class="eye-btn" onclick="toggleEye('recoverPassword', this)">
+            <i data-lucide="eye" style="width:15px;height:15px;"></i>
+          </button>
+        </div>
+      </div>
+      <button type="submit" class="submit-btn" id="recoverBtn">
+        <i data-lucide="shield-alert" style="width:16px;height:16px;"></i>
+        Reset Password
+      </button>
+      <div style="text-align: center; margin-top: 18px;">
+        <a href="#" onclick="switchTab('login')" style="font-size: 13px; color: #5B8DEF; text-decoration: none; opacity: 0.85;">Back to Sign In</a>
+      </div>
+    </form>
+
+    <!-- Admin link -->
+    <div style="margin-top:24px; text-align:center;">
+      <a href="admin.html" style="
+        display:inline-flex; align-items:center; gap:6px;
+        font-size:12px; opacity:0.35; color:inherit; text-decoration:none;
+        padding:6px 12px; border-radius:8px;
+        transition:opacity .2s;
+      " onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='0.35'">
+        <i data-lucide="shield-check" style="width:13px;height:13px;"></i>
+        Admin Panel
+      </a>
+    </div>
+  </div>
+
+  <script>
+    const API = (window.Capacitor || window.location.protocol.startsWith('capacitor')) ? 'https://www.xalikov.uz' : (window.location.protocol.startsWith('http') ? '' : 'http://localhost:3001');
+
+    // Strict email validation — must have format like user@domain.tld
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim());
+    }
+
+    // If already logged in, redirect straight to app
+    if (localStorage.getItem('rf_token')) {
+      window.location.href = 'index.html';
+    }
+
+    lucide.createIcons();
+
+    function switchTab(tab) {
+      document.getElementById('loginForm').classList.toggle('hidden', tab !== 'login');
+      document.getElementById('registerForm').classList.toggle('hidden', tab !== 'register');
+      document.getElementById('recoverForm').classList.toggle('hidden', tab !== 'recover');
+      document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+      document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+      
+      const tabRow = document.querySelector('.tab-row');
+      if (tab === 'recover') {
+        tabRow.style.display = 'none';
+      } else {
+        tabRow.style.display = 'flex';
+      }
+      showError('');
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('errorMsg');
+      el.textContent = msg;
+      el.classList.toggle('show', !!msg);
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (loading) {
+        btn._orig = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="refresh-cw" class="spin" style="width:16px;height:16px;"></i> Please wait…';
+        btn.disabled = true;
+        lucide.createIcons();
+      } else {
+        btn.innerHTML = btn._orig;
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function showSuccess(name) {
+      document.getElementById('loginForm').classList.add('hidden');
+      document.getElementById('registerForm').classList.add('hidden');
+      document.getElementById('recoverForm').classList.add('hidden');
+      document.getElementById('successTitle').textContent = `Welcome, ${name}! 👋`;
+      document.getElementById('successOverlay').classList.add('show');
+      lucide.createIcons();
+      setTimeout(() => { window.location.href = 'index.html'; }, 1400);
+    }
+
+    function toggleEye(inputId, btn) {
+      const inp = document.getElementById(inputId);
+      const showing = inp.type === 'text';
+      inp.type = showing ? 'password' : 'text';
+      btn.innerHTML = `<i data-lucide="${showing ? 'eye' : 'eye-off'}" style="width:15px;height:15px;"></i>`;
+      lucide.createIcons();
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      showError('');
+      const email = document.getElementById('loginEmail').value;
+      if (!isValidEmail(email)) {
+        showError('Please enter a valid email address (e.g. you@example.com)');
+        return;
+      }
+      setLoading('loginBtn', true);
+      try {
+        const res = await fetch(`${API}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+        localStorage.setItem('rf_token', data.token);
+        localStorage.setItem('rf_user', JSON.stringify(data.user));
+        showSuccess(data.user.name);
+      } catch (err) {
+        showError(err.message);
+        setLoading('loginBtn', false);
+      }
+    }
+
+    let tempToken = null;
+    let tempUser = null;
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      showError('');
+      const email = document.getElementById('regEmail').value;
+      if (!isValidEmail(email)) {
+        showError('Please enter a valid email address (e.g. you@example.com)');
+        return;
+      }
+      setLoading('registerBtn', true);
+      try {
+        const res = await fetch(`${API}/api/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name:     document.getElementById('regName').value,
+            surname:  document.getElementById('regSurname').value,
+            email:    document.getElementById('regEmail').value,
+            password: document.getElementById('regPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Registration failed');
+        
+        tempToken = data.token;
+        tempUser = data.user;
+
+        document.getElementById('registerForm').classList.add('hidden');
+        document.querySelector('.tab-row').style.display = 'none';
+
+        document.getElementById('displayKey').textContent = data.user.recoveryKey;
+        document.getElementById('recoveryKeyOverlay').classList.remove('hidden');
+        document.getElementById('recoveryKeyOverlay').classList.add('show');
+        lucide.createIcons();
+      } catch (err) {
+        showError(err.message);
+        setLoading('registerBtn', false);
+      }
+    }
+
+    function copyRecoveryKey() {
+      const key = document.getElementById('displayKey').textContent;
+      navigator.clipboard.writeText(key).then(() => {
+        alert('Recovery key copied to clipboard!');
+      }).catch(err => {
+        console.error('Failed to copy text: ', err);
+      });
+    }
+
+    function proceedToApp() {
+      if (tempToken && tempUser) {
+        localStorage.setItem('rf_token', tempToken);
+        localStorage.setItem('rf_user', JSON.stringify(tempUser));
+        
+        document.getElementById('recoveryKeyOverlay').classList.remove('show');
+        document.getElementById('recoveryKeyOverlay').classList.add('hidden');
+        
+        showSuccess(tempUser.name);
+      }
+    }
+
+    async function handleRecover(e) {
+      e.preventDefault();
+      showError('');
+      const email = document.getElementById('recoverEmail').value;
+      const recoveryKey = document.getElementById('recoverKey').value;
+      const newPassword = document.getElementById('recoverPassword').value;
+
+      if (!isValidEmail(email)) {
+        showError('Please enter a valid email address.');
+        return;
+      }
+      setLoading('recoverBtn', true);
+      try {
+        const res = await fetch(`${API}/api/recover-password`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, recoveryKey, newPassword })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Password recovery failed');
+
+        alert('Password reset successfully! You can now log in with your new password.');
+        switchTab('login');
+        document.getElementById('loginEmail').value = email;
+        document.getElementById('loginPassword').value = '';
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        setLoading('recoverBtn', false);
+      }
+    }
+  </script>
+</body>
+</html>

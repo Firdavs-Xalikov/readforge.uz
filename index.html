@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script src="capacitor.js"></script>
+  <script src="capacitor-runtime.js"></script>
+  <title>ReadForge AI</title>
+  <meta name="description"
+    content="Improve your English through AI-generated stories on topics you love. Practice SAT, IELTS and Academic English with comprehension quizzes and vocabulary.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg: #06070B;
+      --text: #EDEEF3;
+      --glass-bg: rgba(255, 255, 255, 0.045);
+      --glass-border: rgba(255, 255, 255, 0.09);
+      --primary: linear-gradient(135deg, #5B8DEF, #9B6BFF);
+      --btn-ghost-bg: rgba(255, 255, 255, 0.06);
+      --btn-ghost-border: rgba(255, 255, 255, 0.12);
+      --shadow: transparent;
+      --input-bg: rgba(255, 255, 255, 0.06);
+      --input-border: rgba(255, 255, 255, 0.14);
+    }
+
+    html.light {
+      --bg: #F5F6FA;
+      --text: #1B1D28;
+      --glass-bg: rgba(255, 255, 255, 0.75);
+      --glass-border: rgba(20, 20, 40, 0.08);
+      --btn-ghost-bg: rgba(20, 20, 50, 0.05);
+      --btn-ghost-border: rgba(20, 20, 50, 0.12);
+      --shadow: 0 8px 30px rgba(20, 20, 50, 0.06);
+      --input-bg: rgba(20, 20, 50, 0.04);
+      --input-border: rgba(20, 20, 50, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    button,
+    input,
+    select,
+    textarea {
+      color: inherit;
+      font-family: inherit;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.3s ease, color 0.3s ease;
+    }
+
+    .rf-bg-glow {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 85% -5%, rgba(155, 107, 255, 0.16), transparent 60%),
+        radial-gradient(ellipse 800px 700px at -10% 40%, rgba(91, 141, 239, 0.14), transparent 60%),
+        radial-gradient(ellipse 600px 500px at 50% 110%, rgba(91, 141, 239, 0.08), transparent 60%);
+    }
+
+    html.light .rf-bg-glow {
+      background:
+        radial-gradient(ellipse 900px 600px at 85% -5%, rgba(155, 107, 255, 0.10), transparent 60%),
+        radial-gradient(ellipse 800px 700px at -10% 40%, rgba(91, 141, 239, 0.10), transparent 60%);
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 24px calc(96px + env(safe-area-inset-bottom, 0px)) 24px;
+    }
+
+    .max-w-2xl {
+      max-width: 672px;
+      margin: 0 auto;
+    }
+
+    .max-w-3xl {
+      max-width: 768px;
+      margin: 0 auto;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .rf-font-display {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .rf-font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .rf-gradient-text {
+      background: linear-gradient(90deg, #6EA8FE, #B78CFF 60%, #6EA8FE);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: rf-shine 6s linear infinite;
+    }
+
+    @keyframes rf-shine {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .rf-glass {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .rf-btn {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease, opacity .15s ease;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+      padding: 10px 16px;
+      font-size: 14px;
+      color: var(--text);
+    }
+
+    .rf-btn:active {
+      transform: scale(0.97);
+    }
+
+    .rf-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .rf-btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 6px 24px rgba(91, 141, 239, 0.28);
+    }
+
+    .rf-btn-primary:hover:not(:disabled) {
+      box-shadow: 0 8px 30px rgba(155, 107, 255, 0.4);
+    }
+
+    .rf-btn-ghost {
+      background: var(--btn-ghost-bg);
+      border: 1px solid var(--btn-ghost-border);
+    }
+
+    .rf-btn-ghost:hover:not(:disabled) {
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+    html.light .rf-btn-ghost:hover:not(:disabled) {
+      background: rgba(20, 20, 50, 0.1);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: calc(20px + env(safe-area-inset-top, 0px)) 40px 20px;
+      position: relative;
+      z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      .top-bar {
+        padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 16px;
+      }
+    }
+
+    .brand-logo {
+      background: none;
+      border: none;
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .timer-pill {
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .landing-header {
+      text-align: center;
+      padding: 24px 0 48px;
+    }
+
+    .landing-header h1 {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .landing-header p {
+      opacity: 0.6;
+      font-size: 18px;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .stats-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 48px;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      font-size: 14px;
+    }
+
+    .stat-pill .lbl {
+      opacity: 0.6;
+      font-size: 12px;
+    }
+
+    .stat-pill .val {
+      font-weight: 600;
+    }
+
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      opacity: 0.45;
+      margin-bottom: 16px;
+    }
+
+    .grid-topics {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .rf-topic-card {
+      transition: transform .25s ease, border-color .25s ease, background .25s ease;
+      cursor: pointer;
+      text-align: left;
+      padding: 20px;
+      width: 100%;
+      display: flex;
+      gap: 12px;
+      flex-direction: column;
+      color: var(--text);
+    }
+
+    .rf-topic-card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    html.light .rf-topic-card:hover {
+      border-color: rgba(20, 20, 50, 0.18);
+    }
+
+    .topic-icon-wrapper {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+    }
+
+    .center-screen {
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .rf-ember {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #B78CFF 0%, #5B8DEF 45%, transparent 75%);
+      filter: blur(2px);
+      animation: rf-pulse 1.6s ease-in-out infinite;
+      position: relative;
+    }
+
+    .icon-inside-ember {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      top: 50%;
+      left: 50%;
+      color: white;
+    }
+
+    @keyframes rf-pulse {
+
+      0%,
+      100% {
+        transform: scale(0.85);
+        opacity: 0.7;
+      }
+
+      50% {
+        transform: scale(1.15);
+        opacity: 1;
+      }
+    }
+
+    .rf-spark-line {
+      height: 3px;
+      width: 90px;
+      border-radius: 2px;
+      background: linear-gradient(90deg, transparent, #6EA8FE, #B78CFF, transparent);
+      background-size: 200% 100%;
+      animation: rf-spark 2.2s ease-in-out infinite;
+    }
+
+    @keyframes rf-spark {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .stream-preview {
+      width: 100%;
+      max-width: 672px;
+      padding: 24px;
+      margin-top: 8px;
+      text-align: left;
+      max-height: 38vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stream-fade-overlay {
+      background: linear-gradient(transparent, rgba(6, 7, 11, 0.85));
+    }
+
+    html.light .stream-fade-overlay {
+      background: linear-gradient(transparent, rgba(245, 246, 250, 0.85));
+    }
+
+    .rf-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 14px;
+      background: #B78CFF;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: rf-blink 0.9s step-end infinite;
+    }
+
+    @keyframes rf-blink {
+      50% {
+        opacity: 0;
+      }
+    }
+
+    .rf-progress-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #5B8DEF, #9B6BFF);
+      z-index: 50;
+      width: 0%;
+      transition: width .1s ease;
+    }
+
+    .pills-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .article-body-box {
+      padding: 24px 36px;
+      max-height: 52vh;
+      overflow-y: auto;
+      margin-bottom: 24px;
+    }
+
+    .article-body-box h2 {
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+
+    .article-body-box p {
+      line-height: 1.8;
+      opacity: 0.9;
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+
+    .takeaways-box {
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+
+    .takeaway-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 10px;
+      align-items: start;
+    }
+
+    .takeaway-num {
+      font-size: 12px;
+      opacity: 0.45;
+      margin-top: 2px;
+    }
+
+    .quiz-question-card {
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .choice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .rf-choice {
+      display: flex;
+      align-items: start;
+      gap: 12px;
+      padding: 12px 16px;
+      transition: border-color .15s ease, background .15s ease;
+      cursor: pointer;
+    }
+
+    .rf-choice:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    html.light .rf-choice:hover {
+      border-color: rgba(20, 20, 50, 0.25);
+    }
+
+    .choice-letter {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .rf-choice.selected {
+      border-color: #9B6BFF;
+      background: rgba(155, 107, 255, 0.12);
+    }
+
+    .rf-choice.selected .choice-letter {
+      background: #9B6BFF;
+      color: white;
+    }
+
+    .results-hero {
+      padding: 28px;
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .results-hero h3 {
+      font-size: 32px;
+      margin: 8px 0 4px;
+    }
+
+    .rf-choice.correct-ans {
+      border-color: #33D6A6;
+      background: rgba(51, 214, 166, 0.10);
+    }
+
+    .rf-choice.wrong-ans {
+      border-color: #FF6B6B;
+      background: rgba(255, 107, 107, 0.10);
+    }
+
+    .explanation-text {
+      font-size: 12px;
+      opacity: 0.6;
+      line-height: 1.6;
+      padding-left: 4px;
+      margin-top: 12px;
+    }
+
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 640px) {
+      .vocab-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .vocab-card {
+      padding: 20px;
+    }
+
+    .vocab-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 4px;
+    }
+
+    .vocab-badge {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: rgba(91, 141, 239, 0.15);
+      color: #6EA8FE;
+    }
+
+    .rf-fadein {
+      animation: rf-fadein .5s ease both;
+    }
+
+    @keyframes rf-fadein {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .flex-1 {
+      flex: 1;
+      justify-content: center;
+    }
+
+    .rf-scroll::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .rf-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+    }
+
+    html.light .rf-scroll::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.12);
+    }
+
+    .library-tabs button.active {
+      background: rgba(155, 107, 255, 0.15);
+      border-color: rgba(155, 107, 255, 0.3);
+      color: #EDEEF3;
+    }
+    html.light .library-tabs button.active {
+      background: rgba(91, 141, 239, 0.15);
+      border-color: rgba(91, 141, 239, 0.3);
+      color: #06070B;
+    }
+
+    .btn-save-vocab {
+      padding: 4px 8px;
+      font-size: 11px;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.7;
+    }
+    .btn-save-vocab:hover {
+      opacity: 1;
+    }
+
+    .library-card {
+      padding: 20px 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+    .library-card-info { flex: 1; min-width: 0; }
+    .library-card-info h3 {
+      font-size: 15px; font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .library-card-info p { font-size: 12px; opacity: 0.45; }
+    .library-card-actions { display: flex; gap: 8px; flex-shrink: 0; }
+    .library-empty {
+      text-align: center; padding: 64px 24px;
+      opacity: 0.4;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+    }
+
+    /* ── ARTICLE READER MODAL ── */
+    .reader-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 40px 20px;
+      overflow-y: auto;
+      animation: rf-fadein .2s ease;
+    }
+    .reader-overlay.hidden { display: none; }
+    .reader-modal {
+      width: 100%; max-width: 720px;
+      background: #0D0E14;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 24px;
+      padding: 40px;
+      position: relative;
+      box-shadow: 0 40px 100px rgba(0,0,0,0.6);
+      animation: rf-fadein .25s ease;
+    }
+    html.light .reader-modal { background: #fff; }
+    .reader-modal-top {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 16px; margin-bottom: 28px;
+    }
+    .reader-modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px; font-weight: 700; line-height: 1.3; flex: 1;
+    }
+    .reader-close {
+      width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+      background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: inherit; transition: background .15s;
+    }
+    .reader-close:hover { background: rgba(255,255,255,0.13); }
+    html.light .reader-close { background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.1); }
+    .reader-meta { font-size: 12px; opacity: 0.4; margin-bottom: 28px; }
+    .reader-body p {
+      font-size: 16px; line-height: 1.85;
+      margin-bottom: 20px; opacity: 0.88;
+    }
+    .reader-actions { display: flex; gap: 10px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.08); }
+    html.light .reader-actions { border-top-color: rgba(0,0,0,0.08); }
+
+    @keyframes rf-spin {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .rf-spin {
+      animation: rf-spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    /* ── (settings & key-gate styles removed — key is managed server-side) ── */
+
+    /* ─── PASSAGE TRANSLATION STYLES ─── */
+    .passage-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+    
+    .passage-text {
+      line-height: 1.8;
+      opacity: 0.9;
+      margin-bottom: 0 !important;
+      font-size: 15px;
+      padding-right: 36px;
+    }
+
+    .translate-btn {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      transition: all 0.2s ease-in-out;
+      outline: none;
+      z-index: 10;
+    }
+
+    .passage-wrapper:hover .translate-btn {
+      opacity: 0.7;
+    }
+    
+    .passage-wrapper:hover .translate-btn:hover {
+      opacity: 1;
+      background: rgba(155, 107, 255, 0.15);
+      border-color: rgba(155, 107, 255, 0.3);
+      box-shadow: 0 0 8px rgba(155, 107, 255, 0.2);
+    }
+
+    .passage-wrapper.focused .translate-btn {
+      opacity: 0.8;
+      background: rgba(155, 107, 255, 0.1);
+      border-color: rgba(155, 107, 255, 0.2);
+    }
+    
+    .translation-container {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .translation-container.open {
+      grid-template-rows: 1fr;
+    }
+    
+    .translation-inner {
+      overflow: hidden;
+    }
+    
+    .translation-content {
+      margin-top: 10px;
+      padding: 10px 14px;
+      font-size: 14.5px;
+      line-height: 1.7;
+      border-left: 2px solid #9B6BFF;
+      border-radius: 0 8px 8px 0;
+      color: var(--text);
+      opacity: 0.8;
+      background: rgba(255, 255, 255, 0.015);
+      transition: opacity 0.3s ease;
+    }
+
+    .light .translate-btn {
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(0, 0, 0, 0.04);
+      color: #06070B;
+    }
+    .light .passage-wrapper:hover .translate-btn:hover {
+      background: rgba(91, 141, 239, 0.15);
+      border-color: rgba(91, 141, 239, 0.3);
+      box-shadow: 0 0 8px rgba(91, 141, 239, 0.2);
+    }
+    .light .passage-wrapper.focused .translate-btn {
+      background: rgba(91, 141, 239, 0.1);
+      border-color: rgba(91, 141, 239, 0.2);
+    }
+    .light .translation-content {
+      border-left: 2px solid #5B8DEF;
+      background: rgba(0, 0, 0, 0.015);
+      color: #06070B;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="rf-bg-glow"></div>
+
+  <!-- Settings modal removed — API key is managed server-side -->
+
+  <div style="position: relative; z-index: 10;">
+
+    <!-- TOP BAR -->
+    <div class="top-bar">
+      <button class="brand-logo" id="homeBtn">
+        <i data-lucide="sparkles" style="color: #9B6BFF;"></i>
+        <span class="rf-font-display" style="font-weight:600;">ReadForge <span class="rf-gradient-text">AI</span></span>
+      </button>
+      <div class="nav-actions">
+        <div class="rf-glass timer-pill hidden" id="timerPill">
+          <i data-lucide="clock" style="width:13px; height:13px;"></i>
+          <span id="timerTxt" class="rf-font-mono">00:00</span>
+        </div>
+        <button class="rf-btn rf-btn-ghost" id="libraryBtn" style="padding:10px 14px; font-size:13px;">
+          <i data-lucide="bookmark" style="width:14px;height:14px;"></i> Library
+        </button>
+        <div class="rf-glass timer-pill" id="userPill" style="gap:8px;">
+          <i data-lucide="user" style="width:13px;height:13px;opacity:0.6;"></i>
+          <span id="userNameTxt" class="rf-font-mono" style="font-size:12px;"></span>
+        </div>
+        <button class="rf-btn rf-btn-ghost" id="logoutBtn" style="padding:10px;" title="Log out">
+          <i data-lucide="log-out" style="width:15px;height:15px;"></i>
+        </button>
+        <button class="rf-btn rf-btn-ghost" id="themeToggleBtn" style="padding: 10px;">
+          <i data-lucide="sun" id="themeIcon" style="width:16px; height:16px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <!-- LANDING VIEW -->
+      <div id="view-landing" class="rf-fadein">
+        <div class="landing-header">
+          <p class="rf-font-mono"
+            style="font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.45; margin-bottom: 16px;">
+            SAT &middot; IELTS &middot; Academic English</p>
+          <h1 class="rf-font-display">ReadForge <span class="rf-gradient-text">AI</span></h1>
+          <div style="display:flex; justify-content:center; margin-bottom:20px;">
+            <div class="rf-spark-line"></div>
+          </div>
+          <p>Improve your English through stories you'll actually enjoy.</p>
+        </div>
+
+        <div class="stats-container hidden" id="statsBox">
+          <div class="rf-glass stat-pill"><i data-lucide="book-open" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Read</span><span class="val rf-font-mono" id="statRead">0</span></div>
+          <div class="rf-glass stat-pill"><i data-lucide="trophy" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Avg score</span><span class="val rf-font-mono" id="statScore">0%</span></div>
+          <div class="rf-glass stat-pill"><i data-lucide="bar-chart-3" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Words read</span><span class="val rf-font-mono" id="statWords">0</span></div>
+        </div>
+
+        <!-- API key banner removed — key is managed server-side -->
+
+        <p class="section-title">Pick a topic to begin</p>
+        <div class="grid-topics" id="topicsGrid"></div>
+      </div>
+
+      <!-- LOADING VIEW -->
+      <div id="view-loading" class="center-screen hidden">
+        <div class="rf-ember">
+          <i data-lucide="sparkles" class="icon-inside-ember"></i>
+        </div>
+        <div>
+          <p class="rf-font-display" style="font-size:18px; font-weight:600; margin-bottom:4px;">Forging your reading
+          </p>
+          <p class="rf-font-mono" id="loadingMsg" style="font-size:14px; opacity:0.6;">Sparking a new story...</p>
+        </div>
+        <div class="rf-spark-line"></div>
+        <div class="rf-glass stream-preview rf-fadein hidden" id="streamPreview">
+          <h3 class="rf-font-display" id="previewTitle" style="font-size:18px; font-weight:600; margin-bottom:12px;">
+          </h3>
+          <p style="font-size:14px; line-height:1.7; opacity:0.75; white-space:pre-line;">
+            <span id="previewContent"></span><span class="rf-cursor"></span>
+          </p>
+          <div class="stream-fade-overlay"
+            style="position: absolute; left: 0; right: 0; bottom: 0; height: 48px; pointer-events: none;"></div>
+        </div>
+      </div>
+
+      <!-- ERROR VIEW -->
+      <div id="view-error" class="center-screen hidden">
+        <p class="rf-font-display" style="font-size: 20px; font-weight: 600;">Generation didn't finish</p>
+        <p style="font-size: 14px; opacity: 0.6; max-width: 380px;" id="errorDetail">The AI couldn't put together a
+          reading. Try again or pick a different topic.</p>
+        <div style="display:flex; gap:12px;">
+          <button class="rf-btn rf-btn-ghost" id="errorBackBtn"><i data-lucide="arrow-left"></i> Topics</button>
+          <button class="rf-btn rf-btn-primary" id="errorRetryBtn"><i data-lucide="refresh-cw"></i> Try again</button>
+        </div>
+      </div>
+
+      <!-- READING VIEW -->
+      <div id="view-reading" class="max-w-3xl rf-fadein hidden">
+        <div class="rf-progress-bar" id="readingProgress"></div>
+        <div class="pills-group">
+          <div class="rf-glass stat-pill"><i data-lucide="book-open" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Words</span><span class="val rf-font-mono" id="artWordCount">0</span></div>
+          <div class="rf-glass stat-pill"><i data-lucide="clock" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Read time</span><span class="val rf-font-mono" id="artTime">0 min</span></div>
+          <div class="rf-glass stat-pill"><i data-lucide="bar-chart-3" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Level</span><span class="val rf-font-mono" id="artLevel">B2</span></div>
+          <div class="rf-glass stat-pill"><i data-lucide="sparkles" style="width:15px; opacity:0.65;"></i><span
+              class="lbl">Topic</span><span class="val" id="artTopicName">Topic</span></div>
+          <div class="rf-glass stat-pill" style="gap:4px; padding-right:8px;">
+            <i data-lucide="languages" style="width:15px; opacity:0.65;"></i>
+            <span class="lbl">Translate</span>
+            <select id="translationLangSelect" style="background:transparent; border:none; color:inherit; font-size:12px; font-weight:600; cursor:pointer; outline:none; font-family:inherit;">
+              <option value="uz" style="background:var(--card); color:var(--text);">Uzbek (Oʻzbek)</option>
+              <option value="ru" selected style="background:var(--card); color:var(--text);">Russian (Русский)</option>
+              <option value="en" style="background:var(--card); color:var(--text);">English (English)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="rf-glass article-body-box rf-scroll" id="articleScrollArea">
+          <h2 class="rf-font-display" id="articleTitle"></h2>
+          <div id="articleParagraphs"></div>
+        </div>
+
+        <div class="rf-glass takeaways-box hidden" id="takeawaysBox">
+          <p class="section-title" style="margin-bottom:12px; display:flex; align-items:center; gap:8px;">
+            <i data-lucide="sparkles" style="width:13px;"></i> Key Takeaways
+          </p>
+          <div id="takeawaysList"></div>
+        </div>
+
+        <div class="action-row">
+          <button class="rf-btn rf-btn-ghost" id="saveBtn"><i data-lucide="bookmark"></i> Save to Library</button>
+          <button class="rf-btn rf-btn-ghost" id="copyBtn"><i data-lucide="copy"></i> Copy</button>
+          <button class="rf-btn rf-btn-ghost" id="downloadBtn"><i data-lucide="download"></i> Download</button>
+        </div>
+
+        <div id="quizActionContainer">
+          <button class="rf-btn rf-btn-primary" id="startQuizBtn"
+            style="width: 100%; justify-content: center; padding: 14px 24px;">
+            <span>Start Comprehension Quiz</span> <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- QUIZ VIEW -->
+      <div id="view-quiz" class="max-w-2xl rf-fadein hidden">
+        <p class="section-title" style="margin-bottom:4px;">Comprehension Quiz</p>
+        <h2 class="rf-font-display" id="quizArticleTitle" style="font-size:24px; margin-bottom:32px;"></h2>
+        <div id="quizQuestionsContainer"></div>
+        <button class="rf-btn rf-btn-primary" id="submitQuizBtn"
+          style="width:100%; margin-top:32px; justify-content:center; padding:14px;" disabled>
+          Submit Answers <i data-lucide="chevron-right"></i>
+        </button>
+      </div>
+
+      <!-- RESULTS VIEW -->
+      <div id="view-results" class="max-w-2xl rf-fadein hidden">
+        <div class="rf-glass results-hero">
+          <i data-lucide="trophy" id="trophyIcon"
+            style="color: #F0B429; width:28px; height:28px; margin-bottom:8px;"></i>
+          <h3 class="rf-font-display" id="resultsScoreTxt">0 / 0</h3>
+          <p id="resultsPctTxt">You scored 0% on this reading</p>
+        </div>
+        <div id="resultsContentContainer"></div>
+        <div style="display:flex; gap:12px;">
+          <button class="rf-btn rf-btn-ghost flex-1" id="resViewVocabBtn"><i data-lucide="book-marked"></i> View
+            vocabulary</button>
+          <button class="rf-btn rf-btn-primary flex-1" id="resNewReadingBtn"><i data-lucide="rotate-ccw"></i> New
+            reading</button>
+        </div>
+      </div>
+
+      <!-- VOCAB VIEW -->
+      <div id="view-vocab" class="max-w-3xl rf-fadein hidden">
+        <p class="section-title" style="margin-bottom:4px;">New Vocabulary</p>
+        <h2 class="rf-font-display" id="vocabCountTitle" style="font-size:24px; margin-bottom:32px;">0 words from this
+          reading</h2>
+        <div class="vocab-grid" id="vocabGridContainer"></div>
+        <div style="display:flex; gap:12px;">
+          <button class="rf-btn rf-btn-ghost flex-1" id="vocabChangeTopicBtn"><i data-lucide="arrow-left"></i> Change
+            topic</button>
+          <button class="rf-btn rf-btn-primary flex-1" id="vocabNextBtn"><i data-lucide="rotate-ccw"></i> Generate
+            another</button>
+        </div>
+      </div>
+
+      <!-- LIBRARY VIEW -->
+      <div id="view-library" class="max-w-3xl rf-fadein hidden">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px;">
+          <div>
+            <p class="section-title" style="margin-bottom:4px;">My Library</p>
+            <h2 class="rf-font-display" style="font-size:24px;" id="libraryTitle">Saved Articles</h2>
+          </div>
+          <button class="rf-btn rf-btn-ghost" id="libBackBtn"><i data-lucide="arrow-left"></i> Back to Topics</button>
+        </div>
+        <!-- Tabs -->
+        <div class="library-tabs" style="display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 12px;">
+          <button class="rf-btn rf-btn-ghost active" id="libTabArticlesBtn" onclick="switchLibraryTab('articles')" style="font-size:13px; font-weight:600; padding:6px 14px;">Articles</button>
+          <button class="rf-btn rf-btn-ghost" id="libTabVocabBtn" onclick="switchLibraryTab('vocab')" style="font-size:13px; font-weight:600; padding:6px 14px;">Vocabulary Notebook</button>
+        </div>
+        <div id="libraryGrid"></div>
+      </div>
+
+      <!-- ARTICLE READER MODAL -->
+      <div class="reader-overlay hidden" id="readerOverlay">
+        <div class="reader-modal" id="readerModal">
+          <div class="reader-modal-top">
+            <h2 class="reader-modal-title" id="readerTitle"></h2>
+            <button class="reader-close" onclick="closeReaderModal()"><i data-lucide="x" style="width:16px;height:16px;"></i></button>
+          </div>
+          <p class="reader-meta" id="readerMeta"></p>
+          <div class="reader-body" id="readerBody"></div>
+          <div class="reader-actions">
+            <button class="rf-btn rf-btn-ghost" id="readerDownloadBtn">
+              <i data-lucide="download" style="width:15px;height:15px;"></i> Download .txt
+            </button>
+            <button class="rf-btn rf-btn-ghost" onclick="closeReaderModal()">
+              <i data-lucide="x" style="width:15px;height:15px;"></i> Close
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ═══════════════════════ AUTH ═══════════════════════ */
+    function getToken() { return localStorage.getItem('rf_token') || ''; }
+    function getUser()  { try { return JSON.parse(localStorage.getItem('rf_user') || '{}'); } catch { return {}; } }
+
+    // Guard: redirect to login if not authenticated
+    (function authGuard() {
+      if (!getToken()) { window.location.href = 'login.html'; }
+    })();
+
+    /* ═══════════════════════ DATA ═══════════════════════ */
+    const TOPICS = [
+      { id: "cybersecurity", name: "Cybersecurity", desc: "Breaches, defenses & digital heists", icon: "shield-check", hue: "#5B8DEF" },
+      { id: "hacking", name: "Hacking", desc: "Exploits, intrusions & the people who chase them", icon: "terminal", hue: "#33D6A6" },
+      { id: "programming", name: "Programming", desc: "Code that quietly rewired an industry", icon: "code-2", hue: "#9B6BFF" },
+      { id: "artificial-intelligence", name: "Artificial Intelligence", desc: "Machines learning to think and decide", icon: "cpu", hue: "#5B8DEF" },
+      { id: "money", name: "Money & Investing", desc: "Fortunes made, lost, and rebuilt", icon: "trending-up", hue: "#33D6A6" },
+      { id: "billionaires", name: "Billionaires", desc: "The people behind unimaginable wealth", icon: "crown", hue: "#F0B429" },
+      { id: "startups", name: "Startups", desc: "Small ideas that outgrew every expectation", icon: "rocket", hue: "#9B6BFF" },
+      { id: "business", name: "Business", desc: "Strategy, rivalry and reinvention", icon: "briefcase", hue: "#5B8DEF" },
+      { id: "technology", name: "Technology", desc: "Inventions that changed daily life", icon: "zap", hue: "#F0B429" },
+      { id: "famous-companies", name: "Famous Companies", desc: "How household names really began", icon: "building-2", hue: "#33D6A6" },
+      { id: "history", name: "History", desc: "Overlooked moments with lasting weight", icon: "landmark", hue: "#C97B4A" },
+      { id: "psychology", name: "Psychology", desc: "Why people think and act as they do", icon: "brain", hue: "#9B6BFF" },
+      { id: "space", name: "Space", desc: "Exploration at the edge of the possible", icon: "orbit", hue: "#5B8DEF" },
+      { id: "science", name: "Science", desc: "Discoveries that shifted what we know", icon: "flask-conical", hue: "#33D6A6" },
+      { id: "economics", name: "Economics", desc: "The forces behind markets and choices", icon: "line-chart", hue: "#F0B429" },
+      { id: "crime", name: "Crime Stories", desc: "Investigations, mysteries & consequences", icon: "siren", hue: "#FF6B6B" },
+      { id: "entrepreneurship", name: "Entrepreneurship", desc: "Risk, grit, and building from nothing", icon: "lightbulb", hue: "#F0B429" }
+    ];
+
+    const LOADING_MESSAGES = [
+      "Sparking a new story...",
+      "Choosing an angle...",
+      "Drafting the passage...",
+      "Writing comprehension questions...",
+      "Selecting vocabulary...",
+      "Polishing final details..."
+    ];
+
+    const QUESTION_TYPE_LABELS = {
+      main_idea: "Main Idea", detail: "Detail", inference: "Inference",
+      vocabulary: "Vocabulary in Context", purpose: "Purpose / Author's Intention",
+      cause_effect: "Cause & Effect", tone: "Tone & Attitude"
+    };
+
+    /* ═══════════════════════ STATE ═══════════════════════ */
+    let currentTheme = "dark";
+    let activeView = "landing";
+    let selectedTopic = null;
+    let currentArticle = null;
+    let userAnswers = {};
+    let timerValue = 0;
+    let timerInterval = null;
+    let quizStatus = "idle";
+    let wantsQuiz = false;
+    let appStats = { articlesRead: 0, totalWordsRead: 0, totalScore: 0, quizCount: 0, avgScore: 0 };
+    let savedArticleIds = new Set(); // track which titles are already saved
+    let savedVocabWords = new Set(); // track which words are saved
+    let currentLibraryTab = "articles"; // track active tab in library
+
+    /* ═══════════════════════ SERVER CONFIG ═══════════════════════ */
+    // All AI calls go through our Node.js proxy server — auth token sent with every request.
+    const API_BASE = (window.Capacitor || window.location.protocol.startsWith('capacitor')) ? 'https://www.xalikov.uz' : (window.location.protocol.startsWith('http') ? '' : 'http://localhost:3001');
+    function authHeaders() {
+      return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${getToken()}` };
+    }
+
+    /* ═══════════════════════ AI — ARTICLE (via proxy) ═══════════════════════ */
+    async function generateArticleWithGemini(topic, onDelta) {
+      const resp = await fetch(`${API_BASE}/api/article`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ topic })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        if (resp.status === 401) { localStorage.clear(); window.location.href = 'login.html'; return; }
+        throw new Error(err?.error || `Server error ${resp.status}`);
+      }
+
+      const data = await resp.json();
+
+      // Typewriter reveal animation for the preview
+      const words = data.content.split(" ");
+      let revealed = "";
+      for (let i = 0; i < words.length; i += 5) {
+        revealed += (revealed ? " " : "") + words.slice(i, i + 5).join(" ");
+        onDelta({ title: data.title, content: revealed });
+        await new Promise(r => setTimeout(r, 25));
+      }
+
+      return {
+        title: data.title,
+        content: data.content,
+        keyTakeaways: data.keyTakeaways || [],
+        difficulty: data.difficulty || "C1"
+      };
+    }
+
+    /* ═══════════════════════ AI — QUIZ & VOCAB (via proxy) ═══════════════════════ */
+    async function generateQuizAndVocab(article) {
+      const resp = await fetch(`${API_BASE}/api/quiz`, {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ article })
+      });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        if (resp.status === 401) { localStorage.clear(); window.location.href = 'login.html'; return; }
+        throw new Error(err?.error || `Server error ${resp.status}`);
+      }
+
+      return resp.json();
+    }
+
+    /* ═══════════════════════ ENGINE ═══════════════════════ */
+    function initApp() {
+      // Show logged-in user name in nav
+      const user = getUser();
+      if (user.name) {
+        document.getElementById('userNameTxt').textContent = user.name + ' ' + (user.surname || '');
+      }
+      renderTopicCards();
+      setupEventListeners();
+      loadStoredStats();
+      loadSavedTitles();
+      loadSavedVocab();
+      lucide.createIcons();
+    }
+
+    /* ═══════════════════════ LIBRARY ═══════════════════════ */
+    async function loadSavedTitles() {
+      try {
+        const res = await fetch(`${API_BASE}/api/articles/saved`, { headers: authHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        savedArticleIds = new Set(data.articles.map(a => a.title));
+      } catch {}
+    }
+
+    async function loadSavedVocab() {
+      try {
+        const res = await fetch(`${API_BASE}/api/vocab/saved`, { headers: authHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        savedVocabWords = new Set(data.words.map(w => w.word.toLowerCase().trim()));
+      } catch {}
+    }
+
+    async function saveArticleToLibrary() {
+      if (!currentArticle) return;
+      const btn = document.getElementById('saveBtn');
+      const origInner = btn.innerHTML;
+
+      // Already saved?
+      if (savedArticleIds.has(currentArticle.title)) {
+        btn.innerHTML = '<i data-lucide="bookmark-check"></i> Already Saved';
+        lucide.createIcons();
+        setTimeout(() => { btn.innerHTML = origInner; lucide.createIcons(); }, 2000);
+        return;
+      }
+
+      btn.innerHTML = '<i data-lucide="loader"></i> Saving…';
+      btn.disabled = true;
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API_BASE}/api/articles/save`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            title:      currentArticle.title,
+            topic:      currentArticle.topicName,
+            content:    currentArticle.content,
+            difficulty: currentArticle.difficulty,
+            wordCount:  currentArticle.wordCount
+          })
+        });
+        const data = await res.json();
+        if (data.saved) {
+          savedArticleIds.add(currentArticle.title);
+          btn.innerHTML = '<i data-lucide="bookmark-check"></i> Saved!';
+          btn.style.color = '#33D6A6';
+        } else {
+          btn.innerHTML = '<i data-lucide="bookmark-check"></i> Already Saved';
+        }
+      } catch {
+        btn.innerHTML = '<i data-lucide="x"></i> Failed';
+      }
+      lucide.createIcons();
+      btn.disabled = false;
+      setTimeout(() => { btn.innerHTML = origInner; btn.style.color = ''; lucide.createIcons(); }, 2200);
+    }
+
+    async function openLibrary() {
+      switchView('library');
+      switchLibraryTab(currentLibraryTab);
+    }
+
+    async function switchLibraryTab(tab) {
+      currentLibraryTab = tab;
+      
+      // Update UI active tab buttons
+      document.getElementById('libTabArticlesBtn').classList.toggle('active', tab === 'articles');
+      document.getElementById('libTabVocabBtn').classList.toggle('active', tab === 'vocab');
+      document.getElementById('libraryTitle').textContent = tab === 'articles' ? 'Saved Articles' : 'Vocabulary Notebook';
+
+      const grid = document.getElementById('libraryGrid');
+      grid.innerHTML = `<div class="library-empty"><i data-lucide="loader" style="width:28px;height:28px;animation:rf-spin 1s linear infinite;"></i><p>Loading your ${tab}…</p></div>`;
+      lucide.createIcons();
+
+      try {
+        if (tab === 'articles') {
+          const res = await fetch(`${API_BASE}/api/articles/saved`, { headers: authHeaders() });
+          const data = await res.json();
+
+          if (!data.articles || data.articles.length === 0) {
+            grid.innerHTML = `<div class="library-empty">
+              <i data-lucide="bookmark" style="width:36px;height:36px;"></i>
+              <p style="font-size:16px;font-weight:600;">Your library is empty</p>
+              <p style="font-size:13px;">Read an article and click "Save to Library" to store it here.</p>
+            </div>`;
+            lucide.createIcons();
+            return;
+          }
+
+          // Store articles in a map so onclick can reference by ID safely
+          window._libArticles = {};
+          data.articles.forEach(a => { window._libArticles[a.id] = a; });
+
+          grid.innerHTML = data.articles.map(a => {
+            const date = new Date(a.saved_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+            return `
+              <div class="rf-glass library-card">
+                <div class="library-card-info">
+                  <h3>${escHtml(a.title)}</h3>
+                  <p>${escHtml(a.topic || '')} &middot; ${a.word_count || 0} words &middot; Saved ${date}</p>
+                </div>
+                <div class="library-card-actions">
+                  <button class="rf-btn rf-btn-ghost" onclick="openSaved(${a.id})">
+                    <i data-lucide="book-open" style="width:14px;height:14px;"></i> Read
+                  </button>
+                  <button class="rf-btn rf-btn-ghost" style="color:#FF6B6B;" onclick="deleteSaved(${a.id}, this)">
+                    <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                  </button>
+                </div>
+              </div>`;
+          }).join('');
+        } else {
+          // Load Saved Vocabulary
+          const res = await fetch(`${API_BASE}/api/vocab/saved`, { headers: authHeaders() });
+          const data = await res.json();
+
+          if (!data.words || data.words.length === 0) {
+            grid.innerHTML = `<div class="library-empty">
+              <i data-lucide="book-marked" style="width:36px;height:36px;"></i>
+              <p style="font-size:16px;font-weight:600;">Your vocabulary notebook is empty</p>
+              <p style="font-size:13px;">Go to the Vocabulary view after a quiz and click "Add" to save words here.</p>
+            </div>`;
+            lucide.createIcons();
+            return;
+          }
+
+          // Render vocab cards in a nice 2-column or 3-column layout
+          grid.innerHTML = `
+            <div class="vocab-grid">
+              ${data.words.map(w => `
+                <div class="rf-glass vocab-card">
+                  <div class="vocab-header" style="display:flex; justify-content:between; align-items:start;">
+                    <div>
+                      <p class="rf-font-display" style="font-weight:600;font-size:16px;margin:0;">${escHtml(w.word)}</p>
+                      <p class="rf-font-mono" style="font-size:11px;opacity:0.45;margin-top:2px;font-style:italic;">${escHtml(w.pos)} &middot; ${escHtml(w.ipa)}</p>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <span class="rf-font-mono vocab-badge">${escHtml(w.level)}</span>
+                      <button class="rf-btn rf-btn-ghost" style="padding:4px; height:auto; color:#FF6B6B;" onclick="deleteSavedVocab(${w.id}, this)">
+                        <i data-lucide="trash-2" style="width:12px;height:12px;"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <p style="font-size:14px;opacity:0.85;margin-top:10px;margin-bottom:8px;line-height:1.4;">${escHtml(w.definition)}</p>
+                  <p style="font-size:12px;opacity:0.55;margin-bottom:6px;"><span style="opacity:0.7;font-weight:500;">Synonym:</span> ${escHtml(w.synonym)}</p>
+                  <p style="font-size:12px;opacity:0.55;font-style:italic;line-height:1.4;">"${escHtml(w.example)}"</p>
+                </div>
+              `).join('')}
+            </div>
+          `;
+        }
+        lucide.createIcons();
+      } catch (err) {
+        grid.innerHTML = `<div class="library-empty"><p>Failed to load ${tab}. Is the server running?</p></div>`;
+      }
+    }
+
+    async function deleteSavedVocab(id, btn) {
+      if (!confirm("Are you sure you want to delete this word from your notebook?")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API_BASE}/api/vocab/saved/${id}`, { method: 'DELETE', headers: authHeaders() });
+        if (res.ok) {
+          btn.closest('.vocab-card').remove();
+          loadSavedVocab(); // reload set
+        }
+      } catch {
+        btn.disabled = false;
+      }
+    }
+
+    function openSaved(id) {
+      const a = window._libArticles ? window._libArticles[id] : null;
+      if (!a) return;
+      const title = a.title;
+      const content = a.content;
+      const topic = a.topic;
+      const savedAt = a.saved_at;
+
+      const date = new Date(savedAt).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+      document.getElementById('readerTitle').textContent = title;
+      document.getElementById('readerMeta').textContent = `${topic || ''}  ·  Saved ${date}`;
+
+      // Render paragraphs
+      const body = document.getElementById('readerBody');
+      body.innerHTML = content.split(/\n\n+/).map(p => `<p>${escHtml(p.trim())}</p>`).join('');
+
+      // Wire download button
+      document.getElementById('readerDownloadBtn').onclick = () => {
+        const filename = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.txt`;
+        const text = `${title}\n\n${content}`;
+        window.downloadTextFile(filename, text);
+      };
+
+      document.getElementById('readerOverlay').classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      lucide.createIcons();
+    }
+
+    function closeReaderModal() {
+      document.getElementById('readerOverlay').classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    // Close modal on backdrop click
+    document.getElementById('readerOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeReaderModal();
+    });
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeReaderModal();
+    });
+
+    function downloadSaved(id, title, content) {
+      const blob = new Blob([`${title}\n\n${content}`], { type: 'text/plain' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href = url;
+      a.download = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-')}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function deleteSaved(id, btn) {
+      btn.disabled = true;
+      try {
+        await fetch(`${API_BASE}/api/articles/saved/${id}`, { method: 'DELETE', headers: authHeaders() });
+        btn.closest('.library-card').remove();
+        // Reload saved titles
+        loadSavedTitles();
+      } catch { btn.disabled = false; }
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function loadStoredStats() {
+      const user = getUser();
+      const key = user && user.id ? `rf_stats_${user.id}` : "rf_stats";
+      const saved = localStorage.getItem(key);
+      if (saved) { 
+        appStats = JSON.parse(saved); 
+      } else {
+        // Reset to clean stats if no data exists for this user
+        appStats = { articlesRead: 0, totalWordsRead: 0, totalScore: 0, quizCount: 0, avgScore: 0 };
+        // Hide stats box on landing page if 0
+        document.getElementById("statsBox").classList.add("hidden");
+      }
+      updateStatsDashboard();
+    }
+    function saveStats() { 
+      const user = getUser();
+      const key = user && user.id ? `rf_stats_${user.id}` : "rf_stats";
+      localStorage.setItem(key, JSON.stringify(appStats)); 
+      updateStatsDashboard(); 
+    }
+    function updateStatsDashboard() {
+      const box = document.getElementById("statsBox");
+      if (appStats.articlesRead > 0) {
+        box.classList.remove("hidden");
+        document.getElementById("statRead").innerText = appStats.articlesRead;
+        document.getElementById("statScore").innerText = appStats.avgScore + "%";
+        document.getElementById("statWords").innerText = appStats.totalWordsRead.toLocaleString();
+      } else {
+        box.classList.add("hidden");
+      }
+    }
+
+    function renderTopicCards() {
+      const grid = document.getElementById("topicsGrid");
+      grid.innerHTML = "";
+      TOPICS.forEach(t => {
+        const btn = document.createElement("button");
+        btn.className = "rf-glass rf-topic-card rf-fadein";
+        btn.innerHTML = `<div class="topic-icon-wrapper" style="background:${t.hue}22;color:${t.hue};"><i data-lucide="${t.icon}"></i></div><div><p style="font-weight:600;font-size:14px;margin-bottom:4px;">${t.name}</p><p style="font-size:12px;opacity:0.55;line-height:1.4;">${t.desc}</p></div>`;
+        btn.onclick = () => selectTopic(t);
+        grid.appendChild(btn);
+      });
+    }
+
+    function switchView(name) {
+      activeView = name;
+      ['landing','loading','error','reading','quiz','results','vocab','library'].forEach(v => {
+        document.getElementById(`view-${v}`).classList.add('hidden');
+      });
+      document.getElementById(`view-${name}`).classList.remove('hidden');
+      if (name === 'reading' || name === 'quiz') {
+        document.getElementById('timerPill').classList.remove('hidden');
+      } else {
+        document.getElementById('timerPill').classList.add('hidden');
+        clearInterval(timerInterval);
+      }
+    }
+
+    function startTimer() {
+      clearInterval(timerInterval);
+      timerValue = 0;
+      document.getElementById("timerTxt").innerText = "00:00";
+      timerInterval = setInterval(() => {
+        timerValue++;
+        const m = Math.floor(timerValue / 60).toString().padStart(2, "0");
+        const s = (timerValue % 60).toString().padStart(2, "0");
+        document.getElementById("timerTxt").innerText = `${m}:${s}`;
+      }, 1000);
+    }
+
+    async function selectTopic(topic) {
+      selectedTopic = topic;
+      switchView("loading");
+      let msgIdx = 0;
+      document.getElementById("loadingMsg").innerText = LOADING_MESSAGES[0];
+      const msgInterval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % LOADING_MESSAGES.length;
+        document.getElementById("loadingMsg").innerText = LOADING_MESSAGES[msgIdx];
+      }, 1600);
+
+      document.getElementById("streamPreview").classList.add("hidden");
+      document.getElementById("previewTitle").innerText = "";
+      document.getElementById("previewContent").innerText = "";
+
+      try {
+        const data = await generateArticleWithGemini(topic, (preview) => {
+          if (preview.title || preview.content) {
+            document.getElementById("streamPreview").classList.remove("hidden");
+            document.getElementById("previewTitle").innerText = preview.title || "";
+            document.getElementById("previewContent").innerText = preview.content || "";
+          }
+        });
+        clearInterval(msgInterval);
+        const words = (data.content.trim().match(/\S+/g) || []).length;
+        currentArticle = {
+          id: `${topic.id}-${Date.now()}`,
+          title: data.title, content: data.content,
+          keyTakeaways: data.keyTakeaways || [],
+          difficulty: data.difficulty, wordCount: words,
+          readingTime: Math.max(1, Math.round(words / 130)),
+          questions: null, vocabulary: null,
+          topicName: topic.name
+        };
+        renderArticleView();
+        switchView("reading");
+        startTimer();
+        appStats.totalWordsRead += currentArticle.wordCount;
+        saveStats();
+        fetchQuestionsBackground();
+      } catch (e) {
+        clearInterval(msgInterval);
+        const detail = document.getElementById("errorDetail");
+        if (e.message.includes('Failed to fetch') || e.message.includes('NetworkError')) {
+          detail.textContent = 'Cannot connect to the AI server. Make sure you ran: node server.js';
+        } else {
+          detail.textContent = `Generation failed: ${e.message}. Try again or pick a different topic.`;
+        }
+        switchView("error");
+      }
+    }
+
+    async function fetchQuestionsBackground() {
+      quizStatus = "loading"; updateQuizActionButton();
+      try {
+        const data = await generateQuizAndVocab(currentArticle);
+        currentArticle.questions = data.questions;
+        currentArticle.vocabulary = data.vocabulary;
+        quizStatus = "ready"; updateQuizActionButton();
+        if (wantsQuiz) { wantsQuiz = false; launchQuizMode(); }
+      } catch (e) {
+        quizStatus = "error"; updateQuizActionButton();
+      }
+    }
+
+    function updateQuizActionButton() {
+      const c = document.getElementById("quizActionContainer");
+      if (quizStatus === "loading") {
+        c.innerHTML = `<button class="rf-btn rf-btn-primary" style="width:100%;justify-content:center;padding:14px 24px;" disabled><i data-lucide="refresh-cw" style="animation:rf-spin 1s linear infinite;"></i> Generating questions\u2026</button>`;
+      } else if (quizStatus === "error") {
+        c.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;"><p style="font-size:12px;opacity:0.55;">Couldn't generate quiz questions.</p><button class="rf-btn rf-btn-primary" onclick="fetchQuestionsBackground()"><i data-lucide="refresh-cw"></i> Retry</button></div>`;
+      } else {
+        c.innerHTML = `<button class="rf-btn rf-btn-primary" id="startQuizBtn" style="width:100%;justify-content:center;padding:14px 24px;"><span>Start Comprehension Quiz</span> <i data-lucide="chevron-right"></i></button>`;
+        document.getElementById("startQuizBtn").onclick = () => {
+          if (quizStatus === "ready") launchQuizMode();
+          else { wantsQuiz = true; fetchQuestionsBackground(); }
+        };
+      }
+      lucide.createIcons();
+    }
+
+    function renderArticleView() {
+      document.getElementById("artWordCount").innerText = currentArticle.wordCount;
+      document.getElementById("artTime").innerText = `${currentArticle.readingTime} min`;
+      document.getElementById("artLevel").innerText = currentArticle.difficulty;
+      document.getElementById("artTopicName").innerText = currentArticle.topicName;
+      document.getElementById("articleTitle").innerText = currentArticle.title;
+      const pd = document.getElementById("articleParagraphs");
+      pd.innerHTML = "";
+      currentArticle.content.split(/\n\n+/).forEach((p, idx) => {
+        if (!p.trim()) return;
+        const wrapper = document.createElement("div");
+        wrapper.className = "passage-wrapper";
+        
+        const el = document.createElement("p");
+        el.className = "passage-text";
+        el.innerText = p.trim();
+        
+        // Tap handler for mobile devices
+        el.onclick = (e) => {
+          if (e.target.closest('.translate-btn')) return;
+          const wasFocused = wrapper.classList.contains('focused');
+          document.querySelectorAll('.passage-wrapper').forEach(w => w.classList.remove('focused'));
+          if (!wasFocused) {
+            wrapper.classList.add('focused');
+          }
+        };
+
+        const btn = document.createElement("button");
+        btn.className = "translate-btn";
+        btn.innerHTML = `<i data-lucide="languages" style="width: 14px; height: 14px;"></i>`;
+        btn.onclick = (e) => {
+          e.stopPropagation();
+          togglePassageTranslation(btn, idx);
+        };
+        
+        const transContainer = document.createElement("div");
+        transContainer.className = "translation-container";
+        transContainer.innerHTML = `
+          <div class="translation-inner">
+            <div class="translation-content rf-font-sans"></div>
+          </div>
+        `;
+        
+        wrapper.appendChild(el);
+        wrapper.appendChild(btn);
+        wrapper.appendChild(transContainer);
+        pd.appendChild(wrapper);
+      });
+      const box = document.getElementById("takeawaysBox");
+      const list = document.getElementById("takeawaysList");
+      if (currentArticle.keyTakeaways && currentArticle.keyTakeaways.length > 0) {
+        box.classList.remove("hidden");
+        list.innerHTML = "";
+        currentArticle.keyTakeaways.forEach((tk, i) => {
+          const d = document.createElement("div");
+          d.className = "takeaway-item";
+          d.innerHTML = `<span class="rf-font-mono takeaway-num">${String(i + 1).padStart(2, "0")}</span><span style="font-size:14px;opacity:0.85;line-height:1.5;">${tk}</span>`;
+          list.appendChild(d);
+        });
+      } else { box.classList.add("hidden"); }
+      const sa = document.getElementById("articleScrollArea");
+      sa.onscroll = () => {
+        const max = sa.scrollHeight - sa.clientHeight;
+        const pct = max > 0 ? Math.min(100, (sa.scrollTop / max) * 100) : 100;
+        document.getElementById("readingProgress").style.width = pct + "%";
+      };
+      document.getElementById("readingProgress").style.width = "0%";
+      lucide.createIcons();
+    }
+
+    function launchQuizMode() {
+      userAnswers = {};
+      document.getElementById("quizArticleTitle").innerText = currentArticle.title;
+      document.getElementById("submitQuizBtn").disabled = true;
+      const container = document.getElementById("quizQuestionsContainer");
+      container.innerHTML = "";
+      currentArticle.questions.forEach((q, qi) => {
+        const card = document.createElement("div");
+        card.className = "rf-glass quiz-question-card";
+        card.innerHTML = `<p class="rf-font-mono" style="font-size:11px;opacity:0.45;margin-bottom:8px;">${QUESTION_TYPE_LABELS[q.type] || q.type}</p><p style="font-weight:600;line-height:1.5;">${qi + 1}. ${q.question}</p><div class="choice-list" id="qc-${qi}"></div>`;
+        container.appendChild(card);
+        const cb = card.querySelector(`#qc-${qi}`);
+        Object.entries(q.choices).forEach(([letter, txt]) => {
+          const item = document.createElement("div");
+          item.className = "rf-choice rf-glass";
+          item.innerHTML = `<span class="rf-font-mono choice-letter">${letter}</span><span style="font-size:14px;line-height:1.4;">${txt}</span>`;
+          item.onclick = () => {
+            userAnswers[qi] = letter;
+            cb.querySelectorAll(".rf-choice").forEach(c => c.classList.remove("selected"));
+            item.classList.add("selected");
+            if (Object.keys(userAnswers).length === currentArticle.questions.length) {
+              document.getElementById("submitQuizBtn").disabled = false;
+            }
+          };
+          cb.appendChild(item);
+        });
+      });
+      switchView("quiz");
+    }
+
+    function processQuizSubmission() {
+      let score = 0;
+      currentArticle.questions.forEach((q, i) => { if (userAnswers[i] === q.correct) score++; });
+      const pct = Math.round((score / currentArticle.questions.length) * 100);
+      appStats.articlesRead += 1;
+      appStats.quizCount += 1;
+      appStats.totalScore += pct;
+      appStats.avgScore = Math.round(appStats.totalScore / appStats.quizCount);
+      saveStats();
+      document.getElementById("resultsScoreTxt").innerText = `${score} / ${currentArticle.questions.length}`;
+      document.getElementById("resultsPctTxt").innerText = `You scored ${pct}% on this reading`;
+      const trophy = document.getElementById("trophyIcon");
+      if (trophy) trophy.style.color = pct >= 80 ? "#F0B429" : pct >= 50 ? "#6EA8FE" : "#FF6B6B";
+      const rc = document.getElementById("resultsContentContainer");
+      rc.innerHTML = "";
+      currentArticle.questions.forEach((q, qi) => {
+        const ua = userAnswers[qi];
+        const ok = ua === q.correct;
+        const card = document.createElement("div");
+        card.className = "rf-glass quiz-question-card";
+        card.innerHTML = `
+          <p class="rf-font-mono" style="font-size:11px;opacity:0.45;margin-bottom:8px;">${QUESTION_TYPE_LABELS[q.type] || q.type}</p>
+          <p style="font-weight:600;line-height:1.5;display:flex;align-items:start;gap:8px;">
+            <i data-lucide="${ok ? 'check' : 'x'}" style="color:${ok ? '#33D6A6' : '#FF6B6B'};width:17px;height:17px;flex-shrink:0;margin-top:2px;"></i>
+            <span>${qi + 1}. ${q.question}</span>
+          </p>
+          <div class="choice-list">
+            ${Object.entries(q.choices).map(([l, t]) => {
+          const cls = l === q.correct ? "correct-ans" : (l === ua ? "wrong-ans" : "");
+          return `<div class="rf-glass rf-choice ${cls}" style="pointer-events:none;"><span class="rf-font-mono choice-letter">${l}</span><span style="font-size:14px;">${t}</span></div>`;
+        }).join("")}
+          </div>
+          <p class="explanation-text">${q.explanation}</p>
+        `;
+        rc.appendChild(card);
+      });
+      switchView("results");
+      lucide.createIcons();
+    }
+
+    function renderVocabularyView() {
+      document.getElementById("vocabCountTitle").innerText = `${currentArticle.vocabulary.length} words from this reading`;
+      const grid = document.getElementById("vocabGridContainer");
+      grid.innerHTML = "";
+      currentArticle.vocabulary.forEach((v, idx) => {
+        const wordKey = v.word.toLowerCase().trim();
+        const isSaved = savedVocabWords.has(wordKey);
+
+        const card = document.createElement("div");
+        card.className = "rf-glass vocab-card";
+        card.innerHTML = `
+          <div class="vocab-header" style="display:flex; justify-content:space-between; align-items:start; width:100%;">
+            <div>
+              <p class="rf-font-display" style="font-weight:600;font-size:16px;margin:0;">${v.word}</p>
+              <p class="rf-font-mono" style="font-size:11px;opacity:0.45;margin-top:2px;font-style:italic;">${v.pos} &middot; ${v.ipa}</p>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span class="rf-font-mono vocab-badge">${v.level}</span>
+              <button class="rf-btn rf-btn-ghost btn-save-vocab" 
+                onclick="saveVocabWord(this, ${idx})" 
+                style="${isSaved ? 'color:#33D6A6;' : ''}"
+                ${isSaved ? 'disabled' : ''}>
+                <i data-lucide="${isSaved ? 'check' : 'plus'}" style="width: 12px; height: 12px;"></i>
+                <span>${isSaved ? 'Saved' : 'Add'}</span>
+              </button>
+            </div>
+          </div>
+          <p style="font-size:14px;opacity:0.85;margin-top:12px;margin-bottom:8px;line-height:1.4;">${v.definition}</p>
+          <p style="font-size:12px;opacity:0.55;margin-bottom:8px;"><span style="opacity:0.7;font-weight:500;">Synonym:</span> ${v.synonym}</p>
+          <p style="font-size:12px;opacity:0.55;font-style:italic;line-height:1.4;">"${v.example}"</p>
+        `;
+        grid.appendChild(card);
+      });
+      switchView("vocab");
+      lucide.createIcons();
+    }
+
+    async function saveVocabWord(btn, idx) {
+      if (!currentArticle || !currentArticle.vocabulary || !currentArticle.vocabulary[idx]) return;
+      const v = currentArticle.vocabulary[idx];
+      const wordKey = v.word.toLowerCase().trim();
+      
+      btn.disabled = true;
+      const span = btn.querySelector('span');
+      const icon = btn.querySelector('i');
+      span.textContent = 'Saving...';
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/vocab/save`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({
+            word:       v.word,
+            pos:        v.pos,
+            ipa:        v.ipa,
+            definition: v.definition,
+            synonym:    v.synonym,
+            example:    v.example,
+            level:      v.level
+          })
+        });
+        const data = await res.json();
+        if (data.saved) {
+          savedVocabWords.add(wordKey);
+          btn.style.color = '#33D6A6';
+          span.textContent = 'Saved';
+          icon.outerHTML = '<i data-lucide="check" style="width:12px;height:12px;"></i>';
+        } else {
+          span.textContent = 'Saved';
+          icon.outerHTML = '<i data-lucide="check" style="width:12px;height:12px;"></i>';
+        }
+      } catch {
+        btn.disabled = false;
+        span.textContent = 'Add';
+      }
+      lucide.createIcons();
+    }
+
+    /* ─── PASSAGE TRANSLATION LOGIC ─── */
+    const translationCache = {};
+
+    async function togglePassageTranslation(btn, idx) {
+      if (!currentArticle) return;
+      
+      const wrapper = btn.closest('.passage-wrapper');
+      const textContainer = wrapper.querySelector('.passage-text');
+      const container = wrapper.querySelector('.translation-container');
+      const content = wrapper.querySelector('.translation-content');
+      
+      const targetLang = document.getElementById('translationLangSelect').value;
+      const text = textContainer.innerText;
+      const cacheKey = `${currentArticle.title}_${idx}_${targetLang}`;
+      
+      // If already open, close it
+      if (container.classList.contains('open')) {
+        container.classList.remove('open');
+        btn.innerHTML = '<i data-lucide="languages" style="width: 14px; height: 14px;"></i>';
+        lucide.createIcons();
+        return;
+      }
+      
+      // Check cache first
+      if (translationCache[cacheKey]) {
+        content.innerText = translationCache[cacheKey];
+        container.classList.add('open');
+        btn.innerHTML = '<i data-lucide="eye-off" style="width: 14px; height: 14px;"></i>';
+        lucide.createIcons();
+        return;
+      }
+      
+      // Otherwise, load from API
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader-2" class="rf-spin" style="width: 14px; height: 14px;"></i>';
+      lucide.createIcons();
+      
+      try {
+        const res = await fetch(`${API_BASE}/api/translate`, {
+          method: 'POST',
+          headers: authHeaders(),
+          body: JSON.stringify({ text, targetLang })
+        });
+        
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData?.error || 'Translation failed');
+        }
+        
+        const data = await res.json();
+        if (data.translation) {
+          translationCache[cacheKey] = data.translation;
+          content.innerText = data.translation;
+          container.classList.add('open');
+          btn.innerHTML = '<i data-lucide="eye-off" style="width: 14px; height: 14px;"></i>';
+        } else {
+          throw new Error('No translation returned');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Translation failed: ' + err.message);
+        btn.innerHTML = '<i data-lucide="languages" style="width: 14px; height: 14px;"></i>';
+      } finally {
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    /* Settings modal removed — key is managed server-side via .env */
+
+    /* ═══════════════════════ EVENTS ═══════════════════════ */
+    function setupEventListeners() {
+      document.getElementById('homeBtn').onclick = () => switchView('landing');
+      // Note: settings button removed — API key is managed server-side
+      document.getElementById('logoutBtn').onclick = () => {
+        localStorage.removeItem('rf_token');
+        localStorage.removeItem('rf_user');
+        window.location.href = 'login.html';
+      };
+      document.getElementById('libraryBtn').onclick = openLibrary;
+      document.getElementById('libBackBtn').onclick = () => switchView('landing');
+      document.getElementById("errorBackBtn").onclick = () => switchView("landing");
+      document.getElementById("errorRetryBtn").onclick = () => selectTopic(selectedTopic);
+      document.getElementById("submitQuizBtn").onclick = processQuizSubmission;
+      document.getElementById("resViewVocabBtn").onclick = renderVocabularyView;
+      document.getElementById("resNewReadingBtn").onclick = () => selectTopic(selectedTopic);
+      document.getElementById("vocabChangeTopicBtn").onclick = () => switchView("landing");
+      document.getElementById("vocabNextBtn").onclick = () => selectTopic(selectedTopic);
+
+      document.getElementById('saveBtn').onclick = saveArticleToLibrary;
+
+      document.getElementById('copyBtn').onclick = () => {
+        if (!currentArticle) return;
+        navigator.clipboard.writeText(`${currentArticle.title}\n\n${currentArticle.content}`).then(() => {
+          const btn = document.getElementById('copyBtn');
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i data-lucide="check"></i> Copied!';
+          lucide.createIcons();
+          setTimeout(() => { btn.innerHTML = orig; lucide.createIcons(); }, 2000);
+        });
+      };
+
+      document.getElementById("downloadBtn").onclick = () => {
+        if (!currentArticle) return;
+        const filename = `${currentArticle.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.txt`;
+        const text = `${currentArticle.title}\n\n${currentArticle.content}`;
+        window.downloadTextFile(filename, text);
+      };
+
+      document.getElementById("themeToggleBtn").onclick = () => {
+        currentTheme = currentTheme === "dark" ? "light" : "dark";
+        if (currentTheme === "light") {
+          document.documentElement.classList.add("light");
+          document.getElementById("themeIcon").setAttribute("data-lucide", "moon");
+        } else {
+          document.documentElement.classList.remove("light");
+          document.getElementById("themeIcon").setAttribute("data-lucide", "sun");
+        }
+        lucide.createIcons();
+      };
+
+      // Escape key handler (settings modal removed)
+    }
+
+    window.onload = initApp;
+  </script>
+</body>
+
+</html>

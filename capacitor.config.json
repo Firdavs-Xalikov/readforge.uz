@@ -1,0 +1,18 @@
+{
+  "appId": "uz.xalikov.app",
+  "appName": "ReadForge AI",
+  "webDir": "www",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#06070B",
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "spinnerColor": "#9B6BFF",
+      "splashFullScreen": true,
+      "splashImmersive": true
+    }
+  }
+}

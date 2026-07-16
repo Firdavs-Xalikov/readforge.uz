@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <script src="capacitor.js"></script>
+  <script src="capacitor-runtime.js"></script>
+  <title>ReadForge — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    :root {
+      --bg: #06070B;
+      --surface: rgba(255,255,255,0.04);
+      --border: rgba(255,255,255,0.09);
+      --text: #EDEEF3;
+      --muted: rgba(237,238,243,0.5);
+      --primary: linear-gradient(135deg,#5B8DEF,#9B6BFF);
+      --input-bg: rgba(255,255,255,0.05);
+      --input-border: rgba(255,255,255,0.12);
+      --error: #FF6B6B;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    button, input { color: inherit; font-family: inherit; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .bg-glow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 85% -5%, rgba(155,107,255,0.12), transparent 60%),
+        radial-gradient(ellipse 700px 700px at -10% 60%, rgba(91,141,239,0.10), transparent 60%);
+    }
+
+    /* ── LOGIN GATE ── */
+    #gate {
+      position: fixed; inset: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--bg); padding: 24px;
+    }
+    .gate-card {
+      width: 100%; max-width: 400px;
+      background: rgba(13,14,20,0.9);
+      border: 1px solid var(--border);
+      border-radius: 24px; padding: 40px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5);
+      animation: fadein .3s ease;
+    }
+    .brand {
+      display:flex; align-items:center; gap:8px;
+      justify-content:center; margin-bottom:28px;
+    }
+    .grad { background: linear-gradient(90deg,#6EA8FE,#B78CFF); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+    .gate-title { font-family:'Space Grotesk',sans-serif; font-size:22px; font-weight:700; margin-bottom:4px; text-align:center; }
+    .gate-sub { font-size:13px; opacity:.45; text-align:center; margin-bottom:28px; line-height:1.5; }
+
+    .field { margin-bottom:16px; }
+    .field label { display:block; font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; opacity:.5; margin-bottom:7px; }
+    .field-wrap { position:relative; }
+    .field-wrap .fi { position:absolute; left:13px; top:50%; transform:translateY(-50%); width:15px; height:15px; opacity:.3; pointer-events:none; }
+    .field input {
+      width:100%; padding:11px 13px 11px 38px;
+      background:var(--input-bg); border:1px solid var(--input-border);
+      border-radius:11px; font-size:14px; color:var(--text); outline:none;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .field input:focus { border-color:#9B6BFF; box-shadow:0 0 0 3px rgba(155,107,255,.15); }
+    .field input::placeholder { color:rgba(255,255,255,.18); }
+
+    .eye-btn {
+      position:absolute; right:11px; top:50%; transform:translateY(-50%);
+      background:none; border:none; cursor:pointer; color:rgba(255,255,255,.25);
+      padding:4px; line-height:0; transition:color .15s;
+    }
+    .eye-btn:hover { color:rgba(255,255,255,.55); }
+
+    .err-msg {
+      display:none; color:var(--error); font-size:13px;
+      margin-bottom:14px; padding:9px 13px;
+      background:rgba(255,107,107,.1); border:1px solid rgba(255,107,107,.25);
+      border-radius:9px; line-height:1.4;
+    }
+    .err-msg.show { display:block; }
+
+    .btn-primary {
+      width:100%; padding:13px;
+      background:var(--primary); color:#fff; font-weight:700; font-size:15px;
+      border:none; border-radius:12px; cursor:pointer;
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      box-shadow:0 6px 24px rgba(91,141,239,.3);
+      transition:box-shadow .2s, transform .15s, opacity .15s;
+    }
+    .btn-primary:hover:not(:disabled) { box-shadow:0 8px 32px rgba(155,107,255,.4); }
+    .btn-primary:active:not(:disabled) { transform:scale(.98); }
+    .btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+
+    /* ── DASHBOARD ── */
+    #dashboard { position:relative; z-index:10; display:none; }
+    
+    .topbar {
+      display:flex; justify-content:space-between; align-items:center;
+      padding: calc(18px + env(safe-area-inset-top, 0px)) 40px 18px; border-bottom:1px solid var(--border);
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        padding: calc(16px + env(safe-area-inset-top, 0px)) 16px 16px;
+      }
+      .main {
+        padding: 16px;
+      }
+    }
+
+    .topbar-left { display:flex; align-items:center; gap:12px; }
+    .topbar-brand { display:flex; align-items:center; gap:8px; font-family:'Space Grotesk',sans-serif; font-size:16px; font-weight:600; }
+    .admin-badge {
+      font-size:11px; font-weight:600; padding:3px 10px;
+      border-radius:20px; background:rgba(155,107,255,.15); color:#B78CFF;
+      letter-spacing:.04em;
+    }
+    .topbar-right { display:flex; align-items:center; gap:10px; }
+    .admin-name { font-size:13px; opacity:.5; }
+
+    .btn-ghost {
+      padding:8px 14px; background:rgba(255,255,255,.05);
+      border:1px solid var(--border); border-radius:10px;
+      font-size:13px; font-weight:500; cursor:pointer;
+      display:flex; align-items:center; gap:6px;
+      transition:background .15s;
+    }
+    .btn-ghost:hover { background:rgba(255,255,255,.1); }
+
+    .main { padding:40px; }
+    .page-title { font-family:'Space Grotesk',sans-serif; font-size:28px; font-weight:700; margin-bottom:4px; }
+    .page-sub { font-size:13px; opacity:.4; margin-bottom:36px; }
+
+    .stats-row { display:flex; gap:16px; margin-bottom:40px; flex-wrap:wrap; }
+    .stat-card {
+      flex:1; min-width:160px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:18px; padding:24px;
+    }
+    .stat-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+    .stat-val { font-family:'Space Grotesk',sans-serif; font-size:36px; font-weight:700; margin-bottom:4px; }
+    .stat-lbl { font-size:13px; opacity:.45; }
+
+    .section-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .section-head h2 { font-family:'Space Grotesk',sans-serif; font-size:18px; font-weight:600; }
+    .section-head span { font-size:12px; opacity:.35; }
+
+    .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:18px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; }
+    thead th {
+      text-align:left; padding:14px 20px;
+      font-size:11px; font-weight:600; letter-spacing:.06em; text-transform:uppercase;
+      opacity:.4; border-bottom:1px solid var(--border);
+    }
+    tbody tr { border-bottom:1px solid rgba(255,255,255,.04); transition:background .15s; }
+    tbody tr:last-child { border-bottom:none; }
+    tbody tr:hover { background:rgba(255,255,255,.03); }
+    tbody td { padding:14px 20px; font-size:14px; }
+
+    .avatar {
+      width:32px; height:32px; border-radius:50%;
+      background:linear-gradient(135deg,#5B8DEF,#9B6BFF);
+      display:inline-flex; align-items:center; justify-content:center;
+      font-size:12px; font-weight:700; color:#fff; flex-shrink:0;
+    }
+    .user-cell { display:flex; align-items:center; gap:10px; }
+    .user-name { font-weight:600; font-size:14px; }
+    .user-email { font-size:12px; opacity:.4; margin-top:1px; }
+    .badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:12px; font-weight:600; }
+    .badge-blue { background:rgba(91,141,239,.15); color:#6EA8FE; }
+    .badge-purple { background:rgba(155,107,255,.15); color:#B78CFF; }
+
+    .empty-state { text-align:center; padding:60px 20px; opacity:.35; display:flex; flex-direction:column; align-items:center; gap:12px; }
+
+    /* Tabs */
+    .admin-tabs {
+      display: flex; gap: 8px;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+    .admin-tab-btn {
+      padding: 8px 16px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      font-size: 13px; font-weight: 600;
+      color: var(--muted); cursor: pointer;
+      transition: all .2s;
+    }
+    .admin-tab-btn.active {
+      background: rgba(155, 107, 255, 0.12);
+      border-color: rgba(155, 107, 255, 0.25);
+      color: var(--text);
+    }
+
+    .split-layout {
+      display: flex; gap: 24px;
+      align-items: flex-start;
+    }
+    .form-sidebar {
+      width: 320px; flex-shrink: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 18px; padding: 24px;
+    }
+    .flex-1 { flex: 1; }
+
+    @keyframes fadein { from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);} }
+    .fadein { animation:fadein .4s ease both; }
+    .spin { animation:spin 1s linear infinite; display:inline-block; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    @media(max-width:800px) {
+      .split-layout { flex-direction: column-reverse; align-items: stretch; }
+      .form-sidebar { width: 100%; }
+    }
+    @media(max-width:600px) {
+      .topbar{padding:14px 20px;}
+      .main{padding:20px;}
+      .stats-row{flex-direction:column;}
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <!-- ADMIN LOGIN GATE -->
+  <div id="gate">
+    <div class="gate-card">
+      <div class="brand">
+        <i data-lucide="shield-check" style="color:#9B6BFF;width:22px;height:22px;"></i>
+        <span style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:600;">ReadForge <span class="grad">Admin</span></span>
+      </div>
+      <p class="gate-title">Admin Sign In</p>
+      <p class="gate-sub">Sign in with your admin account to access the dashboard.</p>
+
+      <div class="err-msg" id="gateErr"></div>
+
+      <form onsubmit="adminLogin(event)">
+        <div class="field">
+          <label>Email address</label>
+          <div class="field-wrap">
+            <i data-lucide="mail" class="fi"></i>
+            <input type="email" id="adminEmail" placeholder="admin@example.com" required autocomplete="email" autofocus>
+          </div>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <div class="field-wrap">
+            <i data-lucide="lock" class="fi"></i>
+            <input type="password" id="adminPass" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="eye-btn" onclick="toggleEye()">
+              <i data-lucide="eye" style="width:15px;height:15px;" id="eyeIcon"></i>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtn">
+          <i data-lucide="shield-check" style="width:15px;height:15px;"></i>
+          Sign In to Admin
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-brand">
+          <i data-lucide="sparkles" style="color:#9B6BFF;width:18px;height:18px;"></i>
+          ReadForge <span class="grad" style="margin-left:4px;">Admin</span>
+        </div>
+        <span class="admin-badge">Dashboard</span>
+      </div>
+      <div class="topbar-right">
+        <span class="admin-name" id="adminNameLabel"></span>
+        <button class="btn-ghost" onclick="loadStats()">
+          <i data-lucide="refresh-cw" style="width:14px;height:14px;" id="refreshIcon"></i> Refresh
+        </button>
+        <button class="btn-ghost" onclick="window.location.href='login.html'">
+          <i data-lucide="arrow-left" style="width:14px;height:14px;"></i> Back to App
+        </button>
+        <button class="btn-ghost" onclick="adminLogout()">
+          <i data-lucide="log-out" style="width:14px;height:14px;"></i> Sign Out
+        </button>
+      </div>
+    </div>
+
+    <div class="main fadein">
+      <p class="page-title">Dashboard</p>
+      <p class="page-sub" id="lastUpdated">Loading…</p>
+
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(91,141,239,.15);">
+            <i data-lucide="users" style="color:#6EA8FE;width:18px;height:18px;"></i>
+          </div>
+          <div class="stat-val" id="statUsers">–</div>
+          <div class="stat-lbl">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(155,107,255,.15);">
+            <i data-lucide="zap" style="color:#B78CFF;width:18px;height:18px;"></i>
+          </div>
+          <div class="stat-val" id="statGens">–</div>
+          <div class="stat-lbl">Total AI Generations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:rgba(51,214,166,.15);">
+            <i data-lucide="trending-up" style="color:#33D6A6;width:18px;height:18px;"></i>
+          </div>
+          <div class="stat-val" id="statAvg">–</div>
+          <div class="stat-lbl">Avg. per User</div>
+        </div>
+      </div>
+
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab-btn active" id="tabUsersBtn" onclick="switchTab('users')">
+          <i data-lucide="users" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Registered Users
+        </button>
+        <button class="admin-tab-btn" id="tabAdminsBtn" onclick="switchTab('admins')">
+          <i data-lucide="shield" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i> Admins List
+        </button>
+      </div>
+
+      <!-- TAB: USERS -->
+      <div id="tab-users">
+        <div class="section-head">
+          <h2>All Registered Users</h2>
+          <span id="userCountLabel"></span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Joined</th>
+                <th>Generations</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr><td colspan="3">
+                <div class="empty-state">
+                  <i data-lucide="loader" class="spin" style="width:22px;height:22px;"></i>
+                  <p>Loading…</p>
+                </div>
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB: ADMINS -->
+      <div id="tab-admins" class="hidden" style="display:none;">
+        <div class="split-layout">
+          <!-- Left Table -->
+          <div class="flex-1">
+            <div class="section-head">
+              <h2>Admin Accounts</h2>
+              <span id="adminCountLabel"></span>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Admin Name / Email</th>
+                    <th>Created</th>
+                    <th style="text-align:right;">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="adminsTableBody">
+                  <tr><td colspan="3">
+                    <div class="empty-state">
+                      <i data-lucide="loader" class="spin" style="width:22px;height:22px;"></i>
+                      <p>Loading admins…</p>
+                    </div>
+                  </td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Right form to add admin -->
+          <div class="form-sidebar">
+            <h3 style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-bottom:6px;">Add New Admin</h3>
+            <p style="font-size:12px;opacity:0.45;margin-bottom:18px;line-height:1.4;">Create a separate admin login with distinct email and password.</p>
+            <div class="err-msg" id="addAdminErr"></div>
+            <form onsubmit="createNewAdmin(event)" id="addAdminForm">
+              <div class="field">
+                <label>Admin Name</label>
+                <div class="field-wrap">
+                  <i data-lucide="user" class="fi"></i>
+                  <input type="text" id="newAdminName" placeholder="Co-Admin" required>
+                </div>
+              </div>
+              <div class="field">
+                <label>Email address</label>
+                <div class="field-wrap">
+                  <i data-lucide="mail" class="fi"></i>
+                  <input type="email" id="newAdminEmail" placeholder="name@email.com" required>
+                </div>
+              </div>
+              <div class="field">
+                <label>Password</label>
+                <div class="field-wrap">
+                  <i data-lucide="lock" class="fi"></i>
+                  <input type="password" id="newAdminPass" placeholder="Min. 6 chars" required minlength="6">
+                </div>
+              </div>
+              <button type="submit" class="btn-primary" id="addAdminBtn" style="padding:11px;font-size:13px;margin-top:20px;">
+                <i data-lucide="user-plus" style="width:14px;height:14px;"></i> Create Account
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API = (window.Capacitor || window.location.protocol.startsWith('capacitor')) ? 'https://www.xalikov.uz' : (window.location.protocol.startsWith('http') ? '' : 'http://localhost:3001');
+    let adminToken = sessionStorage.getItem('rf_admin_token') || '';
+    let currentTab = 'users';
+
+    lucide.createIcons();
+
+    // Auto-restore session
+    if (adminToken) {
+      showDashboard(JSON.parse(sessionStorage.getItem('rf_admin_info') || '{}'));
+      loadStats();
+    }
+
+    function toggleEye() {
+      const inp = document.getElementById('adminPass');
+      const icon = document.getElementById('eyeIcon');
+      const show = inp.type === 'text';
+      inp.type = show ? 'password' : 'text';
+      icon.setAttribute('data-lucide', show ? 'eye' : 'eye-off');
+      lucide.createIcons();
+    }
+
+    async function adminLogin(e) {
+      e.preventDefault();
+      const err = document.getElementById('gateErr');
+      const btn = document.getElementById('loginBtn');
+      err.classList.remove('show');
+      btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:15px;height:15px;"></i> Signing in…';
+      btn.disabled = true;
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API}/api/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email:    document.getElementById('adminEmail').value,
+            password: document.getElementById('adminPass').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Login failed');
+
+        adminToken = data.token;
+        sessionStorage.setItem('rf_admin_token', adminToken);
+        sessionStorage.setItem('rf_admin_info', JSON.stringify(data.admin));
+        showDashboard(data.admin);
+        loadStats();
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.classList.add('show');
+        btn.innerHTML = '<i data-lucide="shield-check" style="width:15px;height:15px;"></i> Sign In to Admin';
+        btn.disabled = false;
+        lucide.createIcons();
+      }
+    }
+
+    function showDashboard(admin) {
+      document.getElementById('gate').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('adminNameLabel').textContent = admin.email || '';
+      lucide.createIcons();
+    }
+
+    function adminLogout() {
+      adminToken = '';
+      sessionStorage.removeItem('rf_admin_token');
+      sessionStorage.removeItem('rf_admin_info');
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('gate').style.display = 'flex';
+      document.getElementById('loginBtn').innerHTML = '<i data-lucide="shield-check" style="width:15px;height:15px;"></i> Sign In to Admin';
+      lucide.createIcons();
+    }
+
+    function switchTab(tab) {
+      currentTab = tab;
+      document.getElementById('tabUsersBtn').classList.toggle('active', tab === 'users');
+      document.getElementById('tabAdminsBtn').classList.toggle('active', tab === 'admins');
+      
+      const tabUsers = document.getElementById('tab-users');
+      const tabAdmins = document.getElementById('tab-admins');
+
+      if (tab === 'users') {
+        tabUsers.style.display = 'block';
+        tabAdmins.style.display = 'none';
+      } else {
+        tabUsers.style.display = 'none';
+        tabAdmins.style.display = 'block';
+        loadAdminsList();
+      }
+    }
+
+    async function loadStats() {
+      const icon = document.getElementById('refreshIcon');
+      if (icon) icon.classList.add('spin');
+      try {
+        const res = await fetch(`${API}/api/admin/stats`, {
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (res.status === 401) { adminLogout(); return; }
+        renderStats(await res.json());
+        if (currentTab === 'admins') {
+          loadAdminsList();
+        }
+      } catch {}
+      if (icon) icon.classList.remove('spin');
+    }
+
+    async function loadAdminsList() {
+      const tbody = document.getElementById('adminsTableBody');
+      try {
+        const res = await fetch(`${API}/api/admin/list`, {
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (res.status === 401) { adminLogout(); return; }
+        const data = await res.json();
+        
+        document.getElementById('adminCountLabel').textContent = `${data.admins.length} admins`;
+        const loggedAdmin = JSON.parse(sessionStorage.getItem('rf_admin_info') || '{}');
+
+        if (!data.admins || data.admins.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state"><p>No admins found</p></div></td></tr>`;
+          return;
+        }
+
+        tbody.innerHTML = data.admins.map(a => {
+          const initials = (a.name || 'A').slice(0, 2).toUpperCase();
+          const date = new Date(a.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+          const isSelf = a.id === loggedAdmin.id;
+          
+          return `
+            <tr>
+              <td>
+                <div class="user-cell">
+                  <div class="avatar" style="background:${isSelf ? 'linear-gradient(135deg, #33D6A6, #5B8DEF)' : ''}">${initials}</div>
+                  <div>
+                    <div class="user-name">${esc(a.name)} ${isSelf ? '<span class="admin-badge" style="font-size:9px;padding:1px 6px;">You</span>' : ''}</div>
+                    <div class="user-email">${esc(a.email)}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="opacity:.55;font-size:13px;">${date}</td>
+              <td style="text-align:right;">
+                ${isSelf ? '' : `
+                  <button class="btn-ghost" style="color:#FF6B6B;border-color:rgba(255,107,107,0.15);" onclick="deleteAdmin(${a.id}, this)">
+                    <i data-lucide="trash-2" style="width:12px;height:12px;"></i> Delete
+                  </button>
+                `}
+              </td>
+            </tr>`;
+        }).join('');
+        lucide.createIcons();
+      } catch {
+        tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state"><p>Failed to load admins</p></div></td></tr>`;
+      }
+    }
+
+    async function createNewAdmin(e) {
+      e.preventDefault();
+      const err = document.getElementById('addAdminErr');
+      const btn = document.getElementById('addAdminBtn');
+      err.classList.remove('show');
+      
+      btn.disabled = true;
+      btn.innerHTML = '<i data-lucide="loader" class="spin" style="width:14px;height:14px;"></i> Creating…';
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`${API}/api/admin/create`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${adminToken}`
+          },
+          body: JSON.stringify({
+            name:     document.getElementById('newAdminName').value,
+            email:    document.getElementById('newAdminEmail').value,
+            password: document.getElementById('newAdminPass').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Failed to create admin');
+        
+        // Reset form
+        document.getElementById('addAdminForm').reset();
+        loadAdminsList();
+      } catch (ex) {
+        err.textContent = ex.message;
+        err.classList.add('show');
+      }
+      
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="user-plus" style="width:14px;height:14px;"></i> Create Account';
+      lucide.createIcons();
+    }
+
+    async function deleteAdmin(id, btn) {
+      if (!confirm("Are you sure you want to delete this admin account? This action cannot be undone.")) return;
+      btn.disabled = true;
+      try {
+        const res = await fetch(`${API}/api/admin/delete/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${adminToken}` }
+        });
+        if (res.ok) {
+          btn.closest('tr').remove();
+          loadAdminsList();
+        } else {
+          btn.disabled = false;
+        }
+      } catch {
+        btn.disabled = false;
+      }
+    }
+
+    function renderStats(data) {
+      document.getElementById('statUsers').textContent = data.totalUsers;
+      document.getElementById('statGens').textContent  = data.totalGenerations;
+      const avg = data.totalUsers > 0 ? (data.totalGenerations / data.totalUsers).toFixed(1) : '0';
+      document.getElementById('statAvg').textContent = avg;
+      document.getElementById('userCountLabel').textContent = `${data.totalUsers} registered`;
+      document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+      const tbody = document.getElementById('usersTableBody');
+      if (!data.users || data.users.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">
+          <i data-lucide="users" style="width:28px;height:28px;"></i>
+          <p>No users yet</p>
+        </div></td></tr>`;
+        lucide.createIcons();
+        return;
+      }
+
+      tbody.innerHTML = data.users.map(u => {
+        const initials = ((u.name||'?')[0] + (u.surname||'?')[0]).toUpperCase();
+        const joined = new Date(u.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+        const badgeCls = u.generations > 10 ? 'badge-purple' : 'badge-blue';
+        return `<tr>
+          <td>
+            <div class="user-cell">
+              <div class="avatar">${initials}</div>
+              <div>
+                <div class="user-name">${esc(u.name)} ${esc(u.surname)}</div>
+                <div class="user-email">${esc(u.email)}</div>
+              </div>
+            </div>
+          </td>
+          <td style="opacity:.55;font-size:13px;">${joined}</td>
+          <td><span class="badge ${badgeCls}">${u.generations} gen${u.generations !== 1 ? 's' : ''}</span></td>
+        </tr>`;
+      }).join('');
+      lucide.createIcons();
+    }
+
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  </script>
+</body>
+</html>
