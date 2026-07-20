@@ -1686,16 +1686,7 @@
             alert("Checking failed: " + err.message);
           } finally {
             checkBtn.disabled = false;
-            }
-            const data = await res.json();
-            translationCache[cacheKey] = data.translation;
-            directTransContent.innerText = data.translation;
-            directTransBox.style.display = 'block';
-            revealBtn.innerHTML = `<i data-lucide="eye-off" style="width:14px; height:14px;"></i> Hide Translation`;
-          } catch (err) {
-            alert("Translation failed: " + err.message);
-          } finally {
-            revealBtn.disabled = false;
+            checkBtn.innerHTML = `<i data-lucide="check-square" style="width: 14px; height: 14px; margin-right:4px;"></i> Check Translation`;
             lucide.createIcons();
           }
         };
