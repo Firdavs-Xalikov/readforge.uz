@@ -310,20 +310,6 @@
           <div class="stat-val" id="statUsers">–</div>
           <div class="stat-lbl">Total Users</div>
         </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:rgba(155,107,255,.15);">
-            <i data-lucide="zap" style="color:#B78CFF;width:18px;height:18px;"></i>
-          </div>
-          <div class="stat-val" id="statGens">–</div>
-          <div class="stat-lbl">Total AI Generations</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-icon" style="background:rgba(51,214,166,.15);">
-            <i data-lucide="trending-up" style="color:#33D6A6;width:18px;height:18px;"></i>
-          </div>
-          <div class="stat-val" id="statAvg">–</div>
-          <div class="stat-lbl">Avg. per User</div>
-        </div>
       </div>
 
       </div>
@@ -350,11 +336,10 @@
               <tr>
                 <th>User</th>
                 <th>Joined</th>
-                <th>Generations</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
-              <tr><td colspan="3">
+              <tr><td colspan="2">
                 <div class="empty-state">
                   <i data-lucide="loader" class="spin" style="width:22px;height:22px;"></i>
                   <p>Loading…</p>
@@ -650,15 +635,12 @@
 
     function renderStats(data) {
       document.getElementById('statUsers').textContent = data.totalUsers;
-      document.getElementById('statGens').textContent  = data.totalGenerations;
-      const avg = data.totalUsers > 0 ? (data.totalGenerations / data.totalUsers).toFixed(1) : '0';
-      document.getElementById('statAvg').textContent = avg;
       document.getElementById('userCountLabel').textContent = `${data.totalUsers} registered`;
       document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
 
       const tbody = document.getElementById('usersTableBody');
       if (!data.users || data.users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="3"><div class="empty-state">
+        tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state">
           <i data-lucide="users" style="width:28px;height:28px;"></i>
           <p>No users yet</p>
         </div></td></tr>`;
@@ -669,7 +651,6 @@
       tbody.innerHTML = data.users.map(u => {
         const initials = ((u.name||'?')[0] + (u.surname||'?')[0]).toUpperCase();
         const joined = new Date(u.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
-        const badgeCls = u.generations > 10 ? 'badge-purple' : 'badge-blue';
         return `<tr>
           <td>
             <div class="user-cell">
@@ -681,7 +662,6 @@
             </div>
           </td>
           <td style="opacity:.55;font-size:13px;">${joined}</td>
-          <td><span class="badge ${badgeCls}">${u.generations} gen${u.generations !== 1 ? 's' : ''}</span></td>
         </tr>`;
       }).join('');
       lucide.createIcons();
