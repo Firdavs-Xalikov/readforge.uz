@@ -24,7 +24,7 @@ const PORT            = process.env.PORT || 3001;
 const JWT_SECRET      = process.env.JWT_SECRET || 'change-me-in-production';
 const ADMIN_JWT       = process.env.JWT_SECRET + '-admin';
 const BAZAARLINK_MOD  = process.env.BAZAARLINK_MODEL || 'auto:free';
-const OPENROUTER_MOD  = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash:free';
+const OPENROUTER_MOD  = process.env.OPENROUTER_MODEL || 'openrouter/free';
 const BAZAARLINK_BASE = 'https://bazaarlink.ai/api/v1/chat/completions';
 const OPENROUTER_BASE = 'https://openrouter.ai/api/v1/chat/completions';
 
