@@ -225,15 +225,26 @@ const seedAdmins = async () => {
       }
     }
 
+    // Update old default fallback admin if it exists
+    const oldAdminRes = await db.query('SELECT id FROM admins WHERE email = $1', ['admin@readforge.com']);
+    if (oldAdminRes.rowCount > 0) {
+      const newHash = await bcrypt.hash('Firdavs2009', 10);
+      await db.query(
+        'UPDATE admins SET name = $1, email = $2, password = $3 WHERE email = $4',
+        ['Default Admin', 'fjesa@mail.ru', newHash, 'admin@readforge.com']
+      );
+      console.log('🔄 Updated old default admin (admin@readforge.com) to fjesa@mail.ru / Firdavs2009');
+    }
+
     const countRes = await db.query('SELECT COUNT(*) as count FROM admins');
     let count = parseInt(countRes.rows[0].count);
     if (count === 0) {
-      const email = 'admin@readforge.com';
-      const password = 'admin123456';
+      const email = 'fjesa@mail.ru';
+      const password = 'Firdavs2009';
       const hash = await bcrypt.hash(password, 10);
       await db.query('INSERT INTO admins (name, email, password) VALUES ($1, $2, $3)', ['Default Admin', email, hash]);
       count = 1;
-      console.log('💡 No admins found in environment. Seeded default fallback admin (admin@readforge.com / admin123456)');
+      console.log('💡 No admins found in environment. Seeded default fallback admin (fjesa@mail.ru / Firdavs2009)');
     }
     console.log(`✅ Loaded ${count} admin accounts in database`);
 
