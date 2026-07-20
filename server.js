@@ -491,6 +491,29 @@ app.delete('/api/admin/delete/:id', adminMiddleware, async (req, res) => {
 });
 
 /* ─── AI HELPERS ─── */
+function cleanAndParseJson(str) {
+  let cleaned = str.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const firstBrace = cleaned.indexOf('{');
+  const lastBrace = cleaned.lastIndexOf('}');
+  if (firstBrace === -1 || lastBrace === -1) {
+    throw new Error('No JSON object found in response');
+  }
+  cleaned = cleaned.substring(firstBrace, lastBrace + 1);
+  cleaned = cleaned.replace(/\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$/gm, '$1');
+  cleaned = cleaned.replace(/,\s*([}\]])/g, '$1');
+  
+  try {
+    return JSON.parse(cleaned);
+  } catch (err) {
+    try {
+      let fixed = cleaned.replace(/(?:\r\n|\r|\n)/g, " ");
+      return JSON.parse(fixed);
+    } catch (e) {
+      throw new Error(`JSON syntax error: ${err.message}`);
+    }
+  }
+}
+
 async function callOpenRouter(systemPrompt, userPrompt, temperature = 0.85, maxTokens = 2000) {
   let lastError;
   for (let attempt = 1; attempt <= 3; attempt++) {
@@ -523,13 +546,13 @@ async function callOpenRouter(systemPrompt, userPrompt, temperature = 0.85, maxT
         console.error(`[/api/article] Attempt ${attempt} returned empty content.`);
         throw new Error('Empty response from OpenRouter');
       }
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error(`[/api/article] Attempt ${attempt} failed to find JSON in content. Content was:`, raw);
-        console.error(`[/api/article] Attempt ${attempt} full response object:`, JSON.stringify(result));
-        throw new Error('No JSON in OpenRouter response');
+      try {
+        return cleanAndParseJson(raw);
+      } catch (err) {
+        console.error(`[/api/article] Attempt ${attempt} JSON parse failed:`, err.message);
+        console.error(`[/api/article] Attempt ${attempt} raw response was:`, raw);
+        throw err;
       }
-      return JSON.parse(jsonMatch[0]);
     } catch (err) {
       console.warn(`[OpenRouter Attempt ${attempt} error]:`, err.message);
       lastError = err;
@@ -572,13 +595,13 @@ async function callBazaarLink(systemPrompt, userPrompt, temperature = 0.6, maxTo
         console.error(`[/api/quiz] Attempt ${attempt} returned empty content.`);
         throw new Error('Empty response from BazaarLink');
       }
-      const jsonMatch = raw.match(/\{[\s\S]*\}/);
-      if (!jsonMatch) {
-        console.error(`[/api/quiz] Attempt ${attempt} failed to find JSON in content. Content was:`, raw);
-        console.error(`[/api/quiz] Attempt ${attempt} full response object:`, JSON.stringify(result));
-        throw new Error('No JSON in BazaarLink response');
+      try {
+        return cleanAndParseJson(raw);
+      } catch (err) {
+        console.error(`[/api/quiz] Attempt ${attempt} JSON parse failed:`, err.message);
+        console.error(`[/api/quiz] Attempt ${attempt} raw response was:`, raw);
+        throw err;
       }
-      return JSON.parse(jsonMatch[0]);
     } catch (err) {
       console.warn(`[BazaarLink Attempt ${attempt} error]:`, err.message);
       lastError = err;
