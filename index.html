@@ -1627,9 +1627,6 @@
               <button class="rf-btn rf-btn-primary check-trans-btn" style="padding:8px 16px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:4px;">
                 <i data-lucide="check-square" style="width:14px; height:14px;"></i> Check Translation
               </button>
-              <button class="rf-btn reveal-trans-btn" style="padding:8px 16px; font-size:12.5px; font-weight:600; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; gap:4px;">
-                <i data-lucide="eye" style="width:14px; height:14px;"></i> Show Translation
-              </button>
             </div>
             
             <div class="check-feedback-box hidden" style="margin-top:10px; padding:12px; border-radius:8px; background:rgba(110,168,254,0.08); border:1px solid rgba(110,168,254,0.15); display:none; flex-direction:column; gap:6px;">
@@ -1643,20 +1640,12 @@
                 <p class="feedback-suggestion" style="font-size:13px; font-style:italic; line-height:1.5; margin:0; opacity:0.9;"></p>
               </div>
             </div>
-
-            <div class="direct-trans-box hidden" style="margin-top:10px; padding:12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); display:none;">
-              <p style="font-size:11.5px; font-weight:600; opacity:0.5; margin:0 0 4px 0;">DIRECT TRANSLATION:</p>
-              <p class="translation-content" style="font-size:13.5px; line-height:1.7; border-left: 2px solid #9B6BFF; padding-left: 10px; margin:0; opacity:0.95;"></p>
-            </div>
           </div>
         `;
         
         const checkBtn = transContainer.querySelector('.check-trans-btn');
-        const revealBtn = transContainer.querySelector('.reveal-trans-btn');
         const textarea = transContainer.querySelector('.user-trans-input');
         const feedbackBox = transContainer.querySelector('.check-feedback-box');
-        const directTransBox = transContainer.querySelector('.direct-trans-box');
-        const directTransContent = transContainer.querySelector('.translation-content');
         
         checkBtn.onclick = async (e) => {
           e.stopPropagation();
@@ -1697,44 +1686,6 @@
             alert("Checking failed: " + err.message);
           } finally {
             checkBtn.disabled = false;
-            checkBtn.innerHTML = `<i data-lucide="check-square" style="width: 14px; height: 14px;"></i> Check Translation`;
-            lucide.createIcons();
-          }
-        };
-
-        revealBtn.onclick = async (e) => {
-          e.stopPropagation();
-          if (directTransBox.style.display === 'block') {
-            directTransBox.style.display = 'none';
-            revealBtn.innerHTML = `<i data-lucide="eye" style="width:14px; height:14px;"></i> Show Translation`;
-            lucide.createIcons();
-            return;
-          }
-          
-          const targetLang = document.getElementById('translationLangSelect').value;
-          const cacheKey = `${currentArticle.title}_${idx}_${targetLang}`;
-          
-          if (translationCache[cacheKey]) {
-            directTransContent.innerText = translationCache[cacheKey];
-            directTransBox.style.display = 'block';
-            revealBtn.innerHTML = `<i data-lucide="eye-off" style="width:14px; height:14px;"></i> Hide Translation`;
-            lucide.createIcons();
-            return;
-          }
-          
-          revealBtn.disabled = true;
-          revealBtn.innerHTML = `<i data-lucide="loader-2" class="rf-spin" style="width:14px; height:14px;"></i> Loading...`;
-          lucide.createIcons();
-          
-          try {
-            const res = await fetch(`${API_BASE}/api/translate`, {
-              method: 'POST',
-              headers: authHeaders(),
-              body: JSON.stringify({ text: p.trim(), targetLang })
-            });
-            if (!res.ok) {
-              const err = await res.json().catch(() => ({}));
-              throw new Error(err?.error || 'Translation failed');
             }
             const data = await res.json();
             translationCache[cacheKey] = data.translation;
