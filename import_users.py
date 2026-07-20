@@ -70,8 +70,8 @@ trans_dict = {
 def transliterate(text):
     return "".join(trans_dict.get(c, c) for c in text.lower())
 
-# 3. Расширенный генератор на 10 000 уникальных пользователей
-def generate_10000_users(passwords_pool, hashes_pool):
+# 3. Расширенный генератор на нужное количество уникальных пользователей
+def generate_needed_users(count, passwords_pool, hashes_pool):
     # Узбекские мужские имена и фамилии
     uz_names = [
         "Otabek", "Sardor", "Umid", "Jasur", "Bekzod", "Anvar", "Rustam", "Dilshod", "Sanjar", "Sherzod", 
@@ -101,7 +101,7 @@ def generate_10000_users(passwords_pool, hashes_pool):
         "Александр", "Иван", "Алексей", "Дмитрий", "Сергей", "Андрей", "Роман", "Никита", "Егор", "Илья", 
         "Павел", "Олег", "Максим", "Виктор", "Денис", "Владимир", "Михаил", "Артем", "Антон", "Игорь",
         "Владислав", "Ярослав", "Даниил", "Кирилл", "Евгений", "Николай", "Константин", "Юрий", "Анатолий", "Виталий",
-        "Валерий", "Станислав", "Руслан", "Артур", "Вадим", "Тимур", "Глеб", "Матвей", "Федор", "Григорий"
+        "Валерий", "Станислав", "Руслан", "Артур", "Вадим", "Тимур", "Глеб", "Матвей", "Федор", "Grigoriy"
     ]
     ru_surnames = [
         "Иванов", "Петров", "Смирнов", "Кузнецов", "Попов", "Соколов", "Лебедев", "Козлов", "Новиков", "Соловьёв", 
@@ -117,16 +117,16 @@ def generate_10000_users(passwords_pool, hashes_pool):
         "Алена", "Елизавета", "София", "Валерия", "Яна", "Милана", "Маргарита", "Ангелина", "Инна", "Алла",
         "Надежда", "Любовь", "Вера", "Лидия", "Галина", "Нина", "Тамара", "Лариса", "Евгения", "Диана"
     ]
-    ru_fem_surnames = [s + "а" if not s.endswith("ёв") else s.replace("ёв", "ёва") for s in ru_surnames]
+    ru_fem_surnames = [s + "a" if not s.endswith("ёв") else s.replace("ёв", "ёва") for s in ru_surnames]
 
     domains = ["gmail.com", "mail.ru", "yandex.ru"]
     
     generated = []
     seen_emails = set()
     
-    print("Генерирую структуру для 10 000 уникальных пользователей в памяти...")
+    print(f"Генерирую структуру для {count} уникальных пользователей в памяти...")
     
-    while len(generated) < 10000:
+    while len(generated) < count:
         lang = random.choice(["uz", "ru"])
         gender = random.choice(["male", "female"])
         
@@ -134,7 +134,7 @@ def generate_10000_users(passwords_pool, hashes_pool):
             first = random.choice(uz_names) if gender == "male" else random.choice(uz_fem_names)
             last = random.choice(uz_surnames) if gender == "male" else random.choice(uz_fem_surnames)
             last_clean = last.lower().replace("'", "")
-            email_prefix = f"{first.lower()}.{last_clean}{random.randint(100, 9999)}"
+            email_prefix = f"{first.lower()}.{last_clean}{random.randint(100, 999999)}"
         else:
             first = random.choice(ru_names) if gender == "male" else random.choice(ru_fem_names)
             last = random.choice(ru_surnames) if gender == "male" else random.choice(ru_fem_surnames)
@@ -142,7 +142,7 @@ def generate_10000_users(passwords_pool, hashes_pool):
             # Базовый транслит для генерации почты из русских имён
             trans_first = transliterate(first)
             trans_last = transliterate(last)
-            email_prefix = f"{trans_first}.{trans_last}{random.randint(100, 9999)}"
+            email_prefix = f"{trans_first}.{trans_last}{random.randint(100, 999999)}"
             
         email = f"{email_prefix}@{random.choice(domains)}"
         
@@ -168,23 +168,19 @@ def generate_10000_users(passwords_pool, hashes_pool):
         
     return generated
 
-# Глобальный лимит на импорт
-LIMIT_USERS = 10000
-
 # Создаем пул паролей и хешируем их один раз, чтобы сэкономить процессорное время
 print("Подготовка пула хешированных паролей...")
-passwords_pool = ["".join(random.choice(chars) for _ in range(12)) for _ in range(20)]
+passwords_pool = ["".join(random.choice(chars) for _ in range(12)) for _ in range(25)]
 hashes_pool = [hash_password(p) for p in passwords_pool]
 
-users_to_import = generate_10000_users(passwords_pool, hashes_pool)
-
-def import_to_sqlite(users):
+def process_sqlite(target_count):
     import sqlite3
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'readforge.db')
     print(f"Подключение к базе SQLite: {db_path}")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
+    # Инициализируем таблицы если они отсутствуют
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -196,15 +192,43 @@ def import_to_sqlite(users):
             recovery_key TEXT
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS generations (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            type        TEXT NOT NULL,
+            topic       TEXT,
+            created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+        )
+    """)
     conn.commit()
-
-    # Считываем все существующие email за раз, чтобы избежать лишних обращений к диску
+    
+    # 1. Очистка счетчиков генераций
+    cursor.execute("DELETE FROM generations")
+    print("Очищена таблица generations (счетчики генераций сброшены).")
+    conn.commit()
+    
+    # 2. Получение текущего количества пользователей
+    cursor.execute("SELECT COUNT(*) FROM users")
+    current_count = cursor.fetchone()[0]
+    print(f"Текущее количество пользователей в SQLite: {current_count}")
+    
+    needed = target_count - current_count
+    if needed <= 0:
+        print("Пользователей в базе уже достаточно.")
+        conn.close()
+        return 0, current_count
+        
+    print(f"Необходимо добавить пользователей: {needed}")
+    
+    # Генерация пользователей
+    users = generate_needed_users(needed, passwords_pool, hashes_pool)
+    
+    # Считываем все существующие email за раз
     cursor.execute("SELECT email FROM users")
     existing_emails = {row[0].lower() for row in cursor.fetchall()}
     
     success_count = 0
-    skipped_count = 0
-    
     batch_size = 500
     batch = []
     
@@ -214,7 +238,6 @@ def import_to_sqlite(users):
         email = u["email"].lower()
         
         if email in existing_emails:
-            skipped_count += 1
             continue
             
         hashed_pwd = u["hashed_pwd"]
@@ -229,7 +252,7 @@ def import_to_sqlite(users):
             """, batch)
             success_count += len(batch)
             batch = []
-            print(f"[Прогресс] Загружено: {success_count} / {LIMIT_USERS} пользователей...")
+            print(f"[Прогресс SQLite] Добавлено: {success_count} / {needed} пользователей...")
             conn.commit()
             
     if batch:
@@ -240,13 +263,15 @@ def import_to_sqlite(users):
         success_count += len(batch)
         conn.commit()
         
-    # Объединяем WAL файлы в один основной файл
     cursor.execute("PRAGMA wal_checkpoint(TRUNCATE)")
     conn.commit()
+    
+    cursor.execute("SELECT COUNT(*) FROM users")
+    final_count = cursor.fetchone()[0]
     conn.close()
-    return success_count, skipped_count
+    return success_count, final_count
 
-def import_to_postgres(users, url):
+def process_postgres(target_count, url):
     import psycopg2
     from psycopg2.extras import execute_batch
     print("Подключение к PostgreSQL (Supabase)...")
@@ -264,15 +289,43 @@ def import_to_postgres(users, url):
             recovery_key VARCHAR(255)
         )
     """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS generations (
+            id          SERIAL PRIMARY KEY,
+            user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            type        VARCHAR(50) NOT NULL,
+            topic       VARCHAR(255),
+            created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    """)
     conn.commit()
-
+    
+    # 1. Очистка счетчиков генераций
+    cursor.execute("DELETE FROM generations")
+    print("Очищена таблица generations (счетчики генераций сброшены).")
+    conn.commit()
+    
+    # 2. Получение текущего количества пользователей
+    cursor.execute("SELECT COUNT(*) FROM users")
+    current_count = cursor.fetchone()[0]
+    print(f"Текущее количество пользователей в PostgreSQL: {current_count}")
+    
+    needed = target_count - current_count
+    if needed <= 0:
+        print("Пользователей в базе уже достаточно.")
+        conn.close()
+        return 0, current_count
+        
+    print(f"Необходимо добавить пользователей: {needed}")
+    
+    # Генерация пользователей
+    users = generate_needed_users(needed, passwords_pool, hashes_pool)
+    
     # Считываем все существующие email
     cursor.execute("SELECT email FROM users")
     existing_emails = {row[0].lower() for row in cursor.fetchall()}
     
     success_count = 0
-    skipped_count = 0
-    
     batch_size = 500
     batch = []
     
@@ -282,7 +335,6 @@ def import_to_postgres(users, url):
         email = u["email"].lower()
         
         if email in existing_emails:
-            skipped_count += 1
             continue
             
         hashed_pwd = u["hashed_pwd"]
@@ -297,7 +349,7 @@ def import_to_postgres(users, url):
             """, batch, page_size=100)
             success_count += len(batch)
             batch = []
-            print(f"[Прогресс] Загружено: {success_count} / {LIMIT_USERS} пользователей...")
+            print(f"[Прогресс PostgreSQL] Добавлено: {success_count} / {needed} пользователей...")
             conn.commit()
             
     if batch:
@@ -308,20 +360,22 @@ def import_to_postgres(users, url):
         success_count += len(batch)
         conn.commit()
         
+    cursor.execute("SELECT COUNT(*) FROM users")
+    final_count = cursor.fetchone()[0]
     conn.close()
-    return success_count, skipped_count
+    return success_count, final_count
 
 def main():
-    print(f"Запуск процесса масштабного наполнения базы...")
+    TARGET_USER_COUNT = 11862
+    print(f"Запуск процесса наполнения базы до {TARGET_USER_COUNT} пользователей...")
     if use_postgres:
-        success, skipped = import_to_postgres(users_to_import, database_url)
+        success, final = process_postgres(TARGET_USER_COUNT, database_url)
     else:
-        success, skipped = import_to_sqlite(users_to_import)
+        success, final = process_sqlite(TARGET_USER_COUNT)
         
     print("\n--- Финальные Итоги Импорта ---")
     print(f"Успешно добавлено: {success}")
-    print(f"Пропущено дубликатов: {skipped}")
-    print(f"Всего обработано: {success + skipped}")
+    print(f"Итоговое количество пользователей в базе: {final}")
     print("--------------------------------")
 
 if __name__ == "__main__":
