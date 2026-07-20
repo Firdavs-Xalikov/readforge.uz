@@ -300,7 +300,6 @@
 
     <div class="main fadein">
       <p class="page-title">Dashboard</p>
-      <p class="page-sub" id="lastUpdated">Loading…</p>
 
       <div class="stats-row">
         <div class="stat-card">
@@ -310,8 +309,6 @@
           <div class="stat-val" id="statUsers">–</div>
           <div class="stat-lbl">Total Users</div>
         </div>
-      </div>
-
       </div>
 
       <!-- Navigation Tabs -->
@@ -335,11 +332,10 @@
             <thead>
               <tr>
                 <th>User</th>
-                <th>Joined</th>
               </tr>
             </thead>
             <tbody id="usersTableBody">
-              <tr><td colspan="2">
+              <tr><td colspan="1">
                 <div class="empty-state">
                   <i data-lucide="loader" class="spin" style="width:22px;height:22px;"></i>
                   <p>Loading…</p>
@@ -636,11 +632,10 @@
     function renderStats(data) {
       document.getElementById('statUsers').textContent = data.totalUsers;
       document.getElementById('userCountLabel').textContent = `${data.totalUsers} registered`;
-      document.getElementById('lastUpdated').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
 
       const tbody = document.getElementById('usersTableBody');
       if (!data.users || data.users.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state">
+        tbody.innerHTML = `<tr><td colspan="1"><div class="empty-state">
           <i data-lucide="users" style="width:28px;height:28px;"></i>
           <p>No users yet</p>
         </div></td></tr>`;
@@ -650,7 +645,6 @@
 
       tbody.innerHTML = data.users.map(u => {
         const initials = ((u.name||'?')[0] + (u.surname||'?')[0]).toUpperCase();
-        const joined = new Date(u.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
         return `<tr>
           <td>
             <div class="user-cell">
@@ -661,7 +655,6 @@
               </div>
             </div>
           </td>
-          <td style="opacity:.55;font-size:13px;">${joined}</td>
         </tr>`;
       }).join('');
       lucide.createIcons();
