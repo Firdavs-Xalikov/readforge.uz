@@ -510,8 +510,7 @@ async function callOpenRouter(systemPrompt, userPrompt, temperature = 0.85, maxT
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user',   content: userPrompt   }
-          ],
-          response_format: { type: 'json_object' }
+          ]
         })
       });
       if (!res.ok) {
@@ -560,8 +559,7 @@ async function callBazaarLink(systemPrompt, userPrompt, temperature = 0.6, maxTo
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user',   content: userPrompt   }
-          ],
-          response_format: { type: 'json_object' }
+          ]
         })
       });
       if (!res.ok) {
