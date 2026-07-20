@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const filesToCopy = ['index.html', 'login.html', 'admin.html', 'capacitor-runtime.js'];
+const filesToCopy = ['index.html', 'login.html', 'admin.html', 'capacitor-runtime.js', 'favicon.svg', '404.html'];
 const distDir = path.join(__dirname, 'www');
 
 if (!fs.existsSync(distDir)) {

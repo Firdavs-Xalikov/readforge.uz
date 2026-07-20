@@ -9,6 +9,7 @@
   <title>ReadForge AI</title>
   <meta name="description"
     content="Improve your English through AI-generated stories on topics you love. Practice SAT, IELTS and Academic English with comprehension quizzes and vocabulary.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -846,11 +847,14 @@
         <button class="rf-btn rf-btn-ghost" id="libraryBtn" style="padding:10px 14px; font-size:13px;">
           <i data-lucide="bookmark" style="width:14px;height:14px;"></i> Library
         </button>
-        <div class="rf-glass timer-pill" id="userPill" style="gap:8px;">
+        <button class="rf-btn rf-btn-primary" id="loginBtn" style="padding:10px 16px; font-size:13px;" onclick="window.location.href='login.html'">
+          <i data-lucide="log-in" style="width:14px;height:14px;"></i> Sign In
+        </button>
+        <div class="rf-glass timer-pill hidden" id="userPill" style="gap:8px;">
           <i data-lucide="user" style="width:13px;height:13px;opacity:0.6;"></i>
           <span id="userNameTxt" class="rf-font-mono" style="font-size:12px;"></span>
         </div>
-        <button class="rf-btn rf-btn-ghost" id="logoutBtn" style="padding:10px;" title="Log out">
+        <button class="rf-btn rf-btn-ghost hidden" id="logoutBtn" style="padding:10px;" title="Log out">
           <i data-lucide="log-out" style="width:15px;height:15px;"></i>
         </button>
         <button class="rf-btn rf-btn-ghost" id="themeToggleBtn" style="padding: 10px;">
@@ -1058,11 +1062,6 @@
     function getToken() { return localStorage.getItem('rf_token') || ''; }
     function getUser()  { try { return JSON.parse(localStorage.getItem('rf_user') || '{}'); } catch { return {}; } }
 
-    // Guard: redirect to login if not authenticated
-    (function authGuard() {
-      if (!getToken()) { window.location.href = 'login.html'; }
-    })();
-
     /* ═══════════════════════ DATA ═══════════════════════ */
     const TOPICS = [
       { id: "cybersecurity", name: "Cybersecurity", desc: "Breaches, defenses & digital heists", icon: "shield-check", hue: "#5B8DEF" },
@@ -1173,8 +1172,13 @@
 
     /* ═══════════════════════ ENGINE ═══════════════════════ */
     function initApp() {
-      // Show logged-in user name in nav
+      const token = getToken();
       const user = getUser();
+
+      document.getElementById('loginBtn').classList.toggle('hidden', !!token);
+      document.getElementById('userPill').classList.toggle('hidden', !token);
+      document.getElementById('logoutBtn').classList.toggle('hidden', !token);
+
       if (user.name) {
         document.getElementById('userNameTxt').textContent = user.name + ' ' + (user.surname || '');
       }
@@ -1894,7 +1898,7 @@
       document.getElementById('logoutBtn').onclick = () => {
         localStorage.removeItem('rf_token');
         localStorage.removeItem('rf_user');
-        window.location.href = 'login.html';
+        window.location.href = 'index.html';
       };
       document.getElementById('libraryBtn').onclick = openLibrary;
       document.getElementById('libBackBtn').onclick = () => switchView('landing');

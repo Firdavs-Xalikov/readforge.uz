@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>404 — Page Not Found | ReadForge AI</title>
+  <meta name="description" content="Lost in the library? The page you are looking for has vanished into thin air.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    :root {
+      --bg: #06070B;
+      --text: #EDEEF3;
+      --glass-bg: rgba(255, 255, 255, 0.045);
+      --glass-border: rgba(255, 255, 255, 0.09);
+      --primary: linear-gradient(135deg, #5B8DEF, #9B6BFF);
+      --btn-ghost-bg: rgba(255, 255, 255, 0.06);
+      --btn-ghost-border: rgba(255, 255, 255, 0.12);
+      --shadow: transparent;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .rf-bg-glow {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 900px 600px at 50% -10%, rgba(155, 107, 255, 0.18), transparent 60%),
+        radial-gradient(ellipse 700px 700px at 10% 80%, rgba(91, 141, 239, 0.15), transparent 60%);
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 40px 24px;
+      max-width: 540px;
+      width: 100%;
+    }
+
+    .rf-glass {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-radius: 28px;
+      padding: 48px 32px;
+      box-shadow: 0 40px 100px rgba(0, 0, 0, 0.5);
+      animation: floatCard 6s ease-in-out infinite;
+    }
+
+    .brand-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      text-decoration: none;
+      color: var(--text);
+      margin-bottom: 32px;
+      opacity: 0.85;
+      transition: opacity 0.2s ease;
+    }
+
+    .brand-logo:hover {
+      opacity: 1;
+    }
+
+    .error-code {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 110px;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #6EA8FE, #B78CFF 60%, #6EA8FE);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shine 4s linear infinite;
+    }
+
+    .title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #FFF;
+    }
+
+    .description {
+      font-size: 14px;
+      line-height: 1.6;
+      opacity: 0.65;
+      margin-bottom: 36px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    .illustration {
+      width: 140px;
+      height: 140px;
+      margin: 0 auto 32px auto;
+      position: relative;
+    }
+
+    .floating-book {
+      width: 100%;
+      height: 100%;
+      animation: floatBook 4s ease-in-out infinite;
+    }
+
+    .rf-btn {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+      padding: 12px 24px;
+      font-size: 14px;
+      text-decoration: none;
+    }
+
+    .rf-btn-primary {
+      background: var(--primary);
+      color: #FFF;
+      box-shadow: 0 4px 20px rgba(155, 107, 255, 0.25);
+    }
+
+    .rf-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(155, 107, 255, 0.35);
+    }
+
+    .rf-btn-primary:active {
+      transform: translateY(0);
+    }
+
+    @keyframes floatCard {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes floatBook {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50% { transform: translateY(-12px) rotate(3deg); }
+    }
+
+    @keyframes shine {
+      to { background-position: 200% center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="rf-bg-glow"></div>
+
+  <div class="container">
+    <a href="/" class="brand-logo">
+      <i data-lucide="sparkles" style="color: #9B6BFF;"></i>
+      <span>ReadForge <span style="background: linear-gradient(90deg, #6EA8FE, #B78CFF); -webkit-background-clip: text; background-clip: text; color: transparent;">AI</span></span>
+    </a>
+
+    <div class="rf-glass">
+      <div class="illustration">
+        <!-- Sleek floating book and sparkles SVG -->
+        <svg class="floating-book" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="bookGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#5B8DEF" />
+              <stop offset="100%" stop-color="#9B6BFF" />
+            </linearGradient>
+            <filter id="glow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+          <!-- Stars / Sparkles background -->
+          <path d="M20 30L22 34L26 35L22 36L20 40L18 36L14 35L18 34L20 30Z" fill="#B78CFF" opacity="0.6" />
+          <path d="M80 25L81.5 28L84.5 29L81.5 30L80 33L78.5 30L75.5 29L78.5 28L80 25Z" fill="#6EA8FE" opacity="0.6" />
+          <path d="M78 70L79 72L81 72.5L79 73L78 75L77 73L75 72.5L77 72L78 70Z" fill="#B78CFF" opacity="0.5" />
+          
+          <!-- Glowing orbit or light ray behind the book -->
+          <circle cx="50" cy="50" r="30" stroke="url(#bookGrad)" stroke-width="1" stroke-dasharray="4 4" opacity="0.4" />
+          
+          <!-- Book Spine and Covers -->
+          <path d="M50 62V35" stroke="#EDEEF3" stroke-width="3" stroke-linecap="round" />
+          <!-- Left Page -->
+          <path d="M50 35C42 33 26 36 20 42V67C26 62 42 59 50 62" fill="url(#bookGrad)" stroke="#B78CFF" stroke-width="1.5" stroke-linejoin="round" />
+          <!-- Right Page -->
+          <path d="M50 35C58 33 74 36 80 42V67C74 62 58 59 50 62" fill="url(#bookGrad)" stroke="#6EA8FE" stroke-width="1.5" stroke-linejoin="round" />
+          
+          <!-- Book lines to represent text -->
+          <path d="M26 47H42M26 52H38M26 57H44" stroke="#EDEEF3" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+          <path d="M74 47H58M74 52H62M74 57H56" stroke="#EDEEF3" stroke-width="1.5" stroke-linecap="round" opacity="0.6" />
+          
+          <!-- Central glowing sparkle rising -->
+          <path d="M50 28C50 22 52 20 56 20C52 20 50 18 50 12C50 18 48 20 44 20C48 20 50 22 50 28Z" fill="#FFF" filter="url(#glow)" />
+        </svg>
+      </div>
+
+      <div class="error-code">404</div>
+      <h2 class="title">Lost in the Library?</h2>
+      <p class="description">
+        The page you are looking for has vanished into thin air, or never existed in the first place. Let's get you back on track.
+      </p>
+
+      <a href="/" class="rf-btn rf-btn-primary">
+        <i data-lucide="arrow-left" style="width:16px;height:16px;"></i> Back to Home
+      </a>
+    </div>
+  </div>
+
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

@@ -14,7 +14,7 @@ app.use(express.json());
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'login.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 /* ─── CONFIG ─── */
@@ -888,6 +888,11 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+/* ─── 404 ERROR HANDLER ─── */
+app.use((req, res, next) => {
+  res.status(404).sendFile(path.join(__dirname, '404.html'));
+});
+
 /* ─── STARTUP ─── */
 (async () => {
   try {
@@ -902,6 +907,6 @@ app.get('/api/health', async (req, res) => {
     console.log(`\n✅  ReadForge AI server running at http://localhost:${PORT}`);
     console.log(`   Articles (OpenRouter): Model ${OPENROUTER_MOD}`);
     console.log(`   Quiz/Vocab (BazaarLink): Model ${BAZAARLINK_MOD}`);
-    console.log('\n   Open login.html to get started.\n');
+    console.log('\n   Open http://localhost:' + PORT + ' to get started.\n');
   });
 })();
