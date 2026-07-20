@@ -1,0 +1,9 @@
+.env
+node_modules/
+dist/
+www/
+readforge.db
+readforge.db-shm
+readforge.db-wal
+.DS_Store
+*.save
