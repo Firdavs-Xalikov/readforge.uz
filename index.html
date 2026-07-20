@@ -1619,10 +1619,135 @@
         const transContainer = document.createElement("div");
         transContainer.className = "translation-container";
         transContainer.innerHTML = `
-          <div class="translation-inner">
-            <div class="translation-content rf-font-sans"></div>
+          <div class="translation-inner rf-font-sans" style="margin-top:12px; display:flex; flex-direction:column; gap:10px;">
+            <p style="font-size:12.5px;font-weight:600;opacity:0.8;margin:0 0 2px 0;">Translate this paragraph yourself:</p>
+            <textarea class="user-trans-input" placeholder="Write your translation here..." style="width:100%; min-height:80px; padding:10px 12px; font-size:13.5px; border-radius:8px; border:1px solid rgba(255,255,255,0.1); background:rgba(255,255,255,0.03); color:#fff; font-family:inherit; resize:vertical; outline:none; transition: border-color 0.2s;"></textarea>
+            
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="rf-btn rf-btn-primary check-trans-btn" style="padding:8px 16px; font-size:12.5px; font-weight:600; display:flex; align-items:center; gap:4px;">
+                <i data-lucide="check-square" style="width:14px; height:14px;"></i> Check Translation
+              </button>
+              <button class="rf-btn reveal-trans-btn" style="padding:8px 16px; font-size:12.5px; font-weight:600; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); color:#fff; display:flex; align-items:center; gap:4px;">
+                <i data-lucide="eye" style="width:14px; height:14px;"></i> Show Translation
+              </button>
+            </div>
+            
+            <div class="check-feedback-box hidden" style="margin-top:10px; padding:12px; border-radius:8px; background:rgba(110,168,254,0.08); border:1px solid rgba(110,168,254,0.15); display:none; flex-direction:column; gap:6px;">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:13px; font-weight:700; color:#6EA8FE;">AI Translation Check</span>
+                <span class="feedback-score" style="font-size:13px; font-weight:700; background:#6EA8FE; color:#0f172a; padding:2px 8px; border-radius:12px;">90/100</span>
+              </div>
+              <p class="feedback-text" style="font-size:13px; line-height:1.5; margin:4px 0; opacity:0.95;"></p>
+              <div style="margin-top:4px; padding-top:8px; border-top:1px solid rgba(255,255,255,0.08);">
+                <p style="font-size:11.5px; font-weight:600; opacity:0.5; margin:0 0 2px 0;">SUGGESTION:</p>
+                <p class="feedback-suggestion" style="font-size:13px; font-style:italic; line-height:1.5; margin:0; opacity:0.9;"></p>
+              </div>
+            </div>
+
+            <div class="direct-trans-box hidden" style="margin-top:10px; padding:12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); display:none;">
+              <p style="font-size:11.5px; font-weight:600; opacity:0.5; margin:0 0 4px 0;">DIRECT TRANSLATION:</p>
+              <p class="translation-content" style="font-size:13.5px; line-height:1.7; border-left: 2px solid #9B6BFF; padding-left: 10px; margin:0; opacity:0.95;"></p>
+            </div>
           </div>
         `;
+        
+        const checkBtn = transContainer.querySelector('.check-trans-btn');
+        const revealBtn = transContainer.querySelector('.reveal-trans-btn');
+        const textarea = transContainer.querySelector('.user-trans-input');
+        const feedbackBox = transContainer.querySelector('.check-feedback-box');
+        const directTransBox = transContainer.querySelector('.direct-trans-box');
+        const directTransContent = transContainer.querySelector('.translation-content');
+        
+        checkBtn.onclick = async (e) => {
+          e.stopPropagation();
+          const userVal = textarea.value.trim();
+          if (!userVal) {
+            alert("Please type your translation first!");
+            return;
+          }
+          
+          checkBtn.disabled = true;
+          checkBtn.innerHTML = `<i data-lucide="loader-2" class="rf-spin" style="width: 14px; height: 14px;"></i> Checking...`;
+          lucide.createIcons();
+          
+          try {
+            const targetLang = document.getElementById('translationLangSelect').value;
+            const res = await fetch(`${API_BASE}/api/check-translation`, {
+              method: 'POST',
+              headers: authHeaders(),
+              body: JSON.stringify({
+                originalText: p.trim(),
+                userTranslation: userVal,
+                targetLang
+              })
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err?.error || 'Checking failed');
+            }
+            const data = await res.json();
+            
+            feedbackBox.querySelector('.feedback-score').innerText = `${data.score}/100`;
+            feedbackBox.querySelector('.feedback-text').innerText = data.feedback;
+            feedbackBox.querySelector('.feedback-suggestion').innerText = data.suggestion;
+            
+            feedbackBox.classList.remove('hidden');
+            feedbackBox.style.display = 'flex';
+          } catch (err) {
+            alert("Checking failed: " + err.message);
+          } finally {
+            checkBtn.disabled = false;
+            checkBtn.innerHTML = `<i data-lucide="check-square" style="width: 14px; height: 14px;"></i> Check Translation`;
+            lucide.createIcons();
+          }
+        };
+
+        revealBtn.onclick = async (e) => {
+          e.stopPropagation();
+          if (directTransBox.style.display === 'block') {
+            directTransBox.style.display = 'none';
+            revealBtn.innerHTML = `<i data-lucide="eye" style="width:14px; height:14px;"></i> Show Translation`;
+            lucide.createIcons();
+            return;
+          }
+          
+          const targetLang = document.getElementById('translationLangSelect').value;
+          const cacheKey = `${currentArticle.title}_${idx}_${targetLang}`;
+          
+          if (translationCache[cacheKey]) {
+            directTransContent.innerText = translationCache[cacheKey];
+            directTransBox.style.display = 'block';
+            revealBtn.innerHTML = `<i data-lucide="eye-off" style="width:14px; height:14px;"></i> Hide Translation`;
+            lucide.createIcons();
+            return;
+          }
+          
+          revealBtn.disabled = true;
+          revealBtn.innerHTML = `<i data-lucide="loader-2" class="rf-spin" style="width:14px; height:14px;"></i> Loading...`;
+          lucide.createIcons();
+          
+          try {
+            const res = await fetch(`${API_BASE}/api/translate`, {
+              method: 'POST',
+              headers: authHeaders(),
+              body: JSON.stringify({ text: p.trim(), targetLang })
+            });
+            if (!res.ok) {
+              const err = await res.json().catch(() => ({}));
+              throw new Error(err?.error || 'Translation failed');
+            }
+            const data = await res.json();
+            translationCache[cacheKey] = data.translation;
+            directTransContent.innerText = data.translation;
+            directTransBox.style.display = 'block';
+            revealBtn.innerHTML = `<i data-lucide="eye-off" style="width:14px; height:14px;"></i> Hide Translation`;
+          } catch (err) {
+            alert("Translation failed: " + err.message);
+          } finally {
+            revealBtn.disabled = false;
+            lucide.createIcons();
+          }
+        };
         
         wrapper.appendChild(el);
         wrapper.appendChild(btn);
@@ -1806,65 +1931,16 @@
       if (!currentArticle) return;
       
       const wrapper = btn.closest('.passage-wrapper');
-      const textContainer = wrapper.querySelector('.passage-text');
       const container = wrapper.querySelector('.translation-container');
-      const content = wrapper.querySelector('.translation-content');
       
-      const targetLang = document.getElementById('translationLangSelect').value;
-      const text = textContainer.innerText;
-      const cacheKey = `${currentArticle.title}_${idx}_${targetLang}`;
-      
-      // If already open, close it
       if (container.classList.contains('open')) {
         container.classList.remove('open');
         btn.innerHTML = '<i data-lucide="languages" style="width: 14px; height: 14px;"></i>';
-        lucide.createIcons();
-        return;
-      }
-      
-      // Check cache first
-      if (translationCache[cacheKey]) {
-        content.innerText = translationCache[cacheKey];
+      } else {
         container.classList.add('open');
         btn.innerHTML = '<i data-lucide="eye-off" style="width: 14px; height: 14px;"></i>';
-        lucide.createIcons();
-        return;
       }
-      
-      // Otherwise, load from API
-      btn.disabled = true;
-      btn.innerHTML = '<i data-lucide="loader-2" class="rf-spin" style="width: 14px; height: 14px;"></i>';
       lucide.createIcons();
-      
-      try {
-        const res = await fetch(`${API_BASE}/api/translate`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify({ text, targetLang })
-        });
-        
-        if (!res.ok) {
-          const errData = await res.json().catch(() => ({}));
-          throw new Error(errData?.error || 'Translation failed');
-        }
-        
-        const data = await res.json();
-        if (data.translation) {
-          translationCache[cacheKey] = data.translation;
-          content.innerText = data.translation;
-          container.classList.add('open');
-          btn.innerHTML = '<i data-lucide="eye-off" style="width: 14px; height: 14px;"></i>';
-        } else {
-          throw new Error('No translation returned');
-        }
-      } catch (err) {
-        console.error(err);
-        alert('Translation failed: ' + err.message);
-        btn.innerHTML = '<i data-lucide="languages" style="width: 14px; height: 14px;"></i>';
-      } finally {
-        btn.disabled = false;
-        lucide.createIcons();
-      }
     }
 
     /* Settings modal removed — key is managed server-side via .env */

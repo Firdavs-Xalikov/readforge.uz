@@ -706,6 +706,48 @@ app.post('/api/translate', authMiddleware, async (req, res) => {
   }
 });
 
+app.post('/api/check-translation', authMiddleware, async (req, res) => {
+  if (!OPENROUTER_KEY) {
+    return res.status(500).json({ error: 'OpenRouter API key is not configured on the server. Please add it to your project environment variables.' });
+  }
+  const { originalText, userTranslation, targetLang } = req.body;
+  if (!originalText || !userTranslation || !targetLang) {
+    return res.status(400).json({ error: 'Missing originalText, userTranslation, or targetLang' });
+  }
+
+  const langNames = {
+    uz: 'Uzbek (Oʻzbek)',
+    ru: 'Russian (Русский)',
+    en: 'English'
+  };
+  const targetLangName = langNames[targetLang] || targetLang;
+
+  const systemPrompt = `You are a professional bilingual translation assessor and language coach.
+Your job is to assess the user's translation of a given English text into the target language (${targetLangName}).
+
+Provide a structured JSON response containing:
+1. "score": An integer from 0 to 100 representing the accuracy, grammar, and naturalness of the translation.
+2. "feedback": A concise, encouraging explanation in the target language (${targetLangName}) pointing out any grammar mistakes, mistranslations, or awkward phrasing. Keep it to 2-3 sentences.
+3. "suggestion": A perfect, natural translation of the original English text in the target language.
+
+Format the response strictly as a JSON object with these keys: "score", "feedback", "suggestion". Do NOT add any extra text or markdown formatting.`;
+
+  const userPrompt = `Original English Text: "${originalText}"
+User's Translation: "${userTranslation}"`;
+
+  try {
+    const data = await callOpenRouter(systemPrompt, userPrompt, 0.4, 1000);
+    res.json({
+      score: data.score,
+      feedback: data.feedback,
+      suggestion: data.suggestion
+    });
+  } catch (e) {
+    console.error('[/api/check-translation]', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /* ─── SAVED ARTICLES ─── */
 app.post('/api/articles/save', authMiddleware, async (req, res) => {
   const { title, topic, content, difficulty, wordCount } = req.body;
