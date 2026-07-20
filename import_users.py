@@ -3,6 +3,7 @@ import sys
 import secrets
 import subprocess
 import random
+from datetime import datetime, timedelta
 
 # 1. Автоматическая проверка и установка зависимостей
 def check_dependencies(use_postgres):
@@ -58,6 +59,19 @@ def generate_recovery_key():
 
 def hash_password(password):
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt(10)).decode('utf-8')
+
+# Helper to generate random registration date between April 20, 2026 and today
+def generate_random_created_at():
+    start_date = datetime(2026, 4, 20, 0, 0, 0)
+    end_date = datetime.now()
+    
+    delta = end_date - start_date
+    delta_seconds = delta.total_seconds()
+    
+    random_seconds = random.uniform(0, delta_seconds)
+    random_date = start_date + timedelta(seconds=random_seconds)
+    
+    return random_date.strftime('%Y-%m-%d %H:%M:%S')
 
 # Transliteration dictionary for Russian names to generate clean emails
 trans_dict = {
@@ -163,7 +177,8 @@ def generate_needed_users(count, passwords_pool, hashes_pool):
             "language": lang,
             "email": email,
             "password": password,
-            "hashed_pwd": hashed_pwd
+            "hashed_pwd": hashed_pwd,
+            "created_at": generate_random_created_at()
         })
         
     return generated
@@ -242,13 +257,14 @@ def process_sqlite(target_count):
             
         hashed_pwd = u["hashed_pwd"]
         recovery_key = generate_recovery_key()
+        created_at = u["created_at"]
         
-        batch.append((first_name, last_name, email, hashed_pwd, recovery_key))
+        batch.append((first_name, last_name, email, hashed_pwd, recovery_key, created_at))
         
         if len(batch) >= batch_size:
             cursor.executemany("""
-                INSERT INTO users (name, surname, email, password, recovery_key)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO users (name, surname, email, password, recovery_key, created_at)
+                VALUES (?, ?, ?, ?, ?, ?)
             """, batch)
             success_count += len(batch)
             batch = []
@@ -257,8 +273,8 @@ def process_sqlite(target_count):
             
     if batch:
         cursor.executemany("""
-            INSERT INTO users (name, surname, email, password, recovery_key)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO users (name, surname, email, password, recovery_key, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
         """, batch)
         success_count += len(batch)
         conn.commit()
@@ -339,13 +355,14 @@ def process_postgres(target_count, url):
             
         hashed_pwd = u["hashed_pwd"]
         recovery_key = generate_recovery_key()
+        created_at = u["created_at"]
         
-        batch.append((first_name, last_name, email, hashed_pwd, recovery_key))
+        batch.append((first_name, last_name, email, hashed_pwd, recovery_key, created_at))
         
         if len(batch) >= batch_size:
             execute_batch(cursor, """
-                INSERT INTO users (name, surname, email, password, recovery_key)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO users (name, surname, email, password, recovery_key, created_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """, batch, page_size=100)
             success_count += len(batch)
             batch = []
@@ -354,8 +371,8 @@ def process_postgres(target_count, url):
             
     if batch:
         execute_batch(cursor, """
-            INSERT INTO users (name, surname, email, password, recovery_key)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO users (name, surname, email, password, recovery_key, created_at)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, batch, page_size=100)
         success_count += len(batch)
         conn.commit()
