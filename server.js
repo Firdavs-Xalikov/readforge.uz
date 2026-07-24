@@ -229,28 +229,11 @@ const seedAdmins = async () => {
     }
 
     if (adminSpecs.length === 0) {
-      adminSpecs.push({ name: 'Default Admin', email: 'admin@readforge.uz', password: 'AdminPass2026!' });
+      adminSpecs.push({ name: 'Admin 1', email: 'fjesa@mail.ru', password: 'Firdavs2009' });
+      adminSpecs.push({ name: 'Admin 2', email: 'admin@readforge.uz', password: 'AdminPass2026!' });
     }
 
-    const primaryAdmin = adminSpecs[0];
-
-    // Migrate old legacy admin accounts if they exist
-    const legacyEmails = ['admin@readforge.com', 'fjesa@mail.ru'];
-    for (const legacyEmail of legacyEmails) {
-      if (legacyEmail !== primaryAdmin.email) {
-        const legacyRes = await db.query('SELECT id FROM admins WHERE email = $1', [legacyEmail]);
-        if (legacyRes.rowCount > 0) {
-          const newHash = await bcrypt.hash(primaryAdmin.password, 10);
-          await db.query(
-            'UPDATE admins SET name = $1, email = $2, password = $3 WHERE email = $4',
-            [primaryAdmin.name, primaryAdmin.email, newHash, legacyEmail]
-          );
-          console.log(`🔄 Migrated legacy admin (${legacyEmail}) to ${primaryAdmin.email}`);
-        }
-      }
-    }
-
-    // Upsert configured admins
+    // Upsert all configured admins
     for (const adminItem of adminSpecs) {
       const hash = await bcrypt.hash(adminItem.password, 10);
       const existing = await db.query('SELECT id FROM admins WHERE email = $1', [adminItem.email]);
