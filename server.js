@@ -205,48 +205,66 @@ const seedAdmins = async () => {
   try {
     let seededCount = 0;
     
-    // Find all environment keys like ADMIN_1_EMAIL, ADMIN_2_EMAIL, etc.
+    // Find all environment keys like ADMIN_1_EMAIL, ADMIN_2_EMAIL, or ADMIN_EMAIL
+    const adminSpecs = [];
+    if (process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+      adminSpecs.push({
+        name: 'Super Admin',
+        email: process.env.ADMIN_EMAIL.toLowerCase().trim(),
+        password: process.env.ADMIN_PASSWORD.trim()
+      });
+    }
+
     const keys = Object.keys(process.env).filter(key => key.match(/^ADMIN_(\d+)_EMAIL$/i));
     for (const key of keys) {
       const match = key.match(/^ADMIN_(\d+)_EMAIL$/i);
       if (match) {
         const index = match[1];
-        const email = process.env[key].toLowerCase().trim();
+        const email = (process.env[key] || '').toLowerCase().trim();
         const password = (process.env[`ADMIN_${index}_PASSWORD`] || '').trim();
-        
         if (email && password) {
-          const alreadyRes = await db.query('SELECT id FROM admins WHERE email = $1', [email]);
-          if (alreadyRes.rowCount === 0) {
-            const hash = await bcrypt.hash(password, 10);
-            await db.query('INSERT INTO admins (name, email, password) VALUES ($1, $2, $3)', [`Admin ${index}`, email, hash]);
-            seededCount++;
-          }
+          adminSpecs.push({ name: `Admin ${index}`, email, password });
         }
       }
     }
 
-    // Update old default fallback admin if it exists
-    const oldAdminRes = await db.query('SELECT id FROM admins WHERE email = $1', ['admin@readforge.com']);
-    if (oldAdminRes.rowCount > 0) {
-      const newHash = await bcrypt.hash('Firdavs2009', 10);
-      await db.query(
-        'UPDATE admins SET name = $1, email = $2, password = $3 WHERE email = $4',
-        ['Default Admin', 'fjesa@mail.ru', newHash, 'admin@readforge.com']
-      );
-      console.log('🔄 Updated old default admin (admin@readforge.com) to fjesa@mail.ru / Firdavs2009');
+    if (adminSpecs.length === 0) {
+      adminSpecs.push({ name: 'Default Admin', email: 'admin@readforge.uz', password: 'AdminPass2026!' });
+    }
+
+    const primaryAdmin = adminSpecs[0];
+
+    // Migrate old legacy admin accounts if they exist
+    const legacyEmails = ['admin@readforge.com', 'fjesa@mail.ru'];
+    for (const legacyEmail of legacyEmails) {
+      if (legacyEmail !== primaryAdmin.email) {
+        const legacyRes = await db.query('SELECT id FROM admins WHERE email = $1', [legacyEmail]);
+        if (legacyRes.rowCount > 0) {
+          const newHash = await bcrypt.hash(primaryAdmin.password, 10);
+          await db.query(
+            'UPDATE admins SET name = $1, email = $2, password = $3 WHERE email = $4',
+            [primaryAdmin.name, primaryAdmin.email, newHash, legacyEmail]
+          );
+          console.log(`🔄 Migrated legacy admin (${legacyEmail}) to ${primaryAdmin.email}`);
+        }
+      }
+    }
+
+    // Upsert configured admins
+    for (const adminItem of adminSpecs) {
+      const hash = await bcrypt.hash(adminItem.password, 10);
+      const existing = await db.query('SELECT id FROM admins WHERE email = $1', [adminItem.email]);
+      if (existing.rowCount === 0) {
+        await db.query('INSERT INTO admins (name, email, password) VALUES ($1, $2, $3)', [adminItem.name, adminItem.email, hash]);
+        seededCount++;
+      } else {
+        await db.query('UPDATE admins SET password = $1 WHERE email = $2', [hash, adminItem.email]);
+      }
     }
 
     const countRes = await db.query('SELECT COUNT(*) as count FROM admins');
     let count = parseInt(countRes.rows[0].count);
-    if (count === 0) {
-      const email = 'fjesa@mail.ru';
-      const password = 'Firdavs2009';
-      const hash = await bcrypt.hash(password, 10);
-      await db.query('INSERT INTO admins (name, email, password) VALUES ($1, $2, $3)', ['Default Admin', email, hash]);
-      count = 1;
-      console.log('💡 No admins found in environment. Seeded default fallback admin (fjesa@mail.ru / Firdavs2009)');
-    }
-    console.log(`✅ Loaded ${count} admin accounts in database`);
+    console.log(`✅ Loaded ${count} admin account(s) in database`);
 
   } catch (e) {
     console.error('Error seeding admins from environment:', e.message);
